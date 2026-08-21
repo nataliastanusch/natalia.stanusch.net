@@ -1,0 +1,33 @@
+{{ define "main" }}
+<main class="shell">
+
+  {{/* The wide centred block. Comes from the `lede` field in front matter. */}}
+  {{ with .Params.lede }}
+    <section class="about-lede">{{ $.RenderString (dict "display" "block") . }}</section>
+  {{ end }}
+
+  {{/* Text stays in the centred column at its full measure; the portrait
+       hangs out into the right-hand white space. Markup order is text
+       first so it reads correctly; CSS lifts the photo above it on a
+       phone. */}}
+  <div class="about-columns">
+
+    <div class="prose">
+      {{ .Content }}
+    </div>
+
+    {{ with .Params.photo }}
+      <figure class="about-photo">
+        <img src="{{ . | relURL }}"
+             alt="{{ $.Params.photo_alt | default (printf "Portrait of %s" site.Title) }}"
+             width="840" height="900" loading="lazy" decoding="async">
+        {{ with $.Params.photo_credit }}
+          <figcaption>{{ . }}</figcaption>
+        {{ end }}
+      </figure>
+    {{ end }}
+
+  </div>
+
+</main>
+{{ end }}

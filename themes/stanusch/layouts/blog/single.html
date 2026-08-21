@@ -1,0 +1,10 @@
+{{ define "main" }}
+<main class="shell">
+  <div class="prose">
+    <h1 class="page-title">{{ .Title }}</h1>
+    <p class="post-meta">{{ .Date.Format "2 January 2006" }}</p>
+    <div class="post-body">{{ .Content }}</div>
+    {{ partial "tags.html" . }}
+  </div>
+</main>
+{{ end }}

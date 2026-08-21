@@ -1,0 +1,16 @@
+{{ define "main" }}
+<main class="shell">
+  <div class="prose">
+    <h1 class="page-title">{{ .Title }}</h1>
+
+    {{/* Body of content/tags/_index.md, if you write one. */}}
+    {{ with .Content }}<div class="page-intro">{{ . }}</div>{{ end }}
+
+    <ul class="tags">
+      {{ range .Data.Terms.Alphabetical }}
+        <li><a href="{{ .Page.RelPermalink }}">{{ .Page.Title }} ({{ .Count }})</a></li>
+      {{ end }}
+    </ul>
+  </div>
+</main>
+{{ end }}

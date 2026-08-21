@@ -1,0 +1,14 @@
+{{ define "main" }}
+<main class="shell">
+  <div class="prose">
+    <h1 class="page-title">Tagged &ldquo;{{ .Title }}&rdquo;</h1>
+
+    {{/* Body of content/tags/<tag>/_index.md, if you write one. */}}
+    {{ with .Content }}<div class="page-intro">{{ . }}</div>{{ end }}
+
+    {{ range .Pages.ByDate.Reverse }}
+      {{ partial "entry.html" . }}
+    {{ end }}
+  </div>
+</main>
+{{ end }}

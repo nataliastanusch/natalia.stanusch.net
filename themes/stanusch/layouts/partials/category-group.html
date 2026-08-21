@@ -1,0 +1,8 @@
+{{/* Context: a PagesGroup from GroupByParam "category".
+     The id is what the Overview list at the top of the page targets. */}}
+<h2 class="category" id="cat-{{ .Key | urlize }}">{{ .Key }}</h2>
+{{ range .Pages.ByDate.Reverse }}
+  {{ partial "entry.html" . }}
+{{ end }}
+{{/* Categories run long, so offer the way back without scrolling to the foot. */}}
+<p class="to-top to-top--section"><a href="#top">&uarr; Back to top</a></p>

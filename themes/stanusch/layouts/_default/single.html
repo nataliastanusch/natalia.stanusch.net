@@ -1,0 +1,17 @@
+{{ define "main" }}
+<main class="shell">
+  <div class="prose">
+
+    {{/* No <h1>: the body's own first line is the heading, exactly as it
+         appears on the list. `title` only sets the browser tab and RSS. */}}
+    <div class="entry-body">{{ .Content }}</div>
+
+    {{ partial "tags.html" . }}
+
+    {{ with .Parent }}
+      <p class="back"><a href="{{ .RelPermalink }}">&larr; {{ .Title }}</a></p>
+    {{ end }}
+
+  </div>
+</main>
+{{ end }}

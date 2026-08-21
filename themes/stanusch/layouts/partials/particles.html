@@ -1,0 +1,7 @@
+{{/* Full-viewport particle field.
+     particles.js is vendored in static/js rather than loaded from a CDN:
+     no third-party request, works offline, and nothing to break if the
+     CDN changes. Licence sits beside it in static/js. */}}
+<div class="particles-bg" id="particles-js" aria-hidden="true"></div>
+<script src="{{ "js/particles.js" | relURL }}" defer></script>
+<script src="{{ "js/particles-config.js" | relURL }}" defer></script>

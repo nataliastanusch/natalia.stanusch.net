@@ -1,0 +1,51 @@
+{{/* One item.
+
+     No `title` in front matter  → a short citation; the whole markdown
+                                   body shows here.
+     A `title` is set            → only the opening block shows here, and
+                                   the rest lives on the entry's own page.
+
+     "Opening block" means the first block of any kind - paragraph, list,
+     heading, blockquote - not specifically a <p>. A body that opens with
+     a list would otherwise have that list silently skipped. When the
+     first block is a heading, the block after it comes too, since a bare
+     heading is a useless preview. */}}
+
+{{ $hasPage := ne .Title "" }}
+{{ $full    := trim (.Content | string) " \n\t\r" }}
+{{ $preview := $full }}
+
+{{ if $hasPage }}
+  {{ $blockRe := `(?s)<p[^>]*>.*?</p>|<ul[^>]*>.*?</ul>|<ol[^>]*>.*?</ol>|<h[1-6][^>]*>.*?</h[1-6]>|<blockquote[^>]*>.*?</blockquote>|<pre[^>]*>.*?</pre>|<table[^>]*>.*?</table>|<figure[^>]*>.*?</figure>` }}
+  {{ $blocks := findRE $blockRe $full 2 }}
+  {{ if $blocks }}
+    {{ $first := index $blocks 0 }}
+    {{ if and (hasPrefix $first "<h") (gt (len $blocks) 1) }}
+      {{ $preview = printf "%s%s" $first (index $blocks 1) }}
+    {{ else }}
+      {{ $preview = $first }}
+    {{ end }}
+  {{ end }}
+{{ end }}
+
+<article class="entry"
+         data-date="{{ .Date.Format "2006-01-02" }}"
+         data-category="{{ .Params.category }}"
+         data-tags="{{ delimit (.Params.tags | default slice) "|" }}">
+  <div class="entry-body">
+    {{ if $preview }}
+      {{ $preview | safeHTML }}
+    {{ else if $hasPage }}
+      {{/* Body is empty. Show the title rather than nothing at all. */}}
+      <p><a href="{{ .RelPermalink }}">{{ .Title }}</a></p>
+    {{ end }}
+  </div>
+
+  {{ if and $hasPage $preview }}
+    <p class="entry-more">
+      <a href="{{ .RelPermalink }}">Read more &rarr;<span class="sr-only">: {{ .Title }}</span></a>
+    </p>
+  {{ end }}
+
+  {{ partial "tags.html" . }}
+</article>

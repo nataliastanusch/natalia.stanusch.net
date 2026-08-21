@@ -1,0 +1,74 @@
+{{ define "main" }}
+
+{{/* Sections that get the jump list and filter bar. Add or remove names here. */}}
+{{ $filterable := in (slice "publications" "projects") .Section }}
+
+{{/* Work out the category order once, then use it for both the jump list
+     and the groups themselves, so the two can never disagree. */}}
+{{ $groups := .Pages.GroupByParam "category" }}
+{{ $keys   := slice }}
+{{ range .Params.category_order }}
+  {{ $k := . }}
+  {{ range where $groups "Key" $k }}{{ $keys = $keys | append $k }}{{ end }}
+{{ end }}
+{{ range $groups }}
+  {{ if not (in $keys .Key) }}{{ $keys = $keys | append .Key }}{{ end }}
+{{ end }}
+
+<main class="shell">
+  <div class="prose">
+
+    <h1 class="page-title">{{ .Title }}</h1>
+
+    {{ with .Content }}<div class="page-intro">{{ . }}</div>{{ end }}
+
+    {{ if and $filterable $keys }}
+      <nav class="category-jump" aria-labelledby="overview-heading">
+        <h2 class="overview-title" id="overview-heading">Overview</h2>
+        <ul>
+          {{ range $keys }}
+            <li><a class="overview-link" href="#cat-{{ . | urlize }}">{{ . }}</a></li>
+          {{ end }}
+        </ul>
+      </nav>
+    {{ end }}
+
+    {{ if $filterable }}
+      {{/* Hidden until the script runs, so no-JS readers aren't shown
+           controls that do nothing. The default view below is complete
+           and correct on its own. */}}
+      <div class="filters" hidden>
+        <div class="filter-views" role="group" aria-label="Sort entries">
+          <span class="filter-label" aria-hidden="true">Sort by</span>
+          <button type="button" data-view="default"  aria-pressed="true">Default</button>
+          <button type="button" data-view="recent"   aria-pressed="false">Most recent</button>
+          <button type="button" data-view="tag"      aria-pressed="false">By tag</button>
+          <button type="button" data-view="category" aria-pressed="false">By category</button>
+        </div>
+
+        <div class="filter-search" hidden>
+          <label class="sr-only" for="tag-search">Search tags</label>
+          <input type="search" id="tag-search" autocomplete="off"
+                 placeholder="Type to find a tag&hellip;">
+        </div>
+
+        <div class="filter-values" hidden></div>
+      </div>
+    {{ end }}
+
+    <div class="entries" id="entries">
+      {{ range $keys }}
+        {{ $k := . }}
+        {{ range where $groups "Key" $k }}
+          {{ partial "category-group.html" . }}
+        {{ end }}
+      {{ end }}
+    </div>
+
+  </div>
+</main>
+
+{{ if $filterable }}
+  <script src="{{ "js/filters.js" | relURL }}" defer></script>
+{{ end }}
+{{ end }}

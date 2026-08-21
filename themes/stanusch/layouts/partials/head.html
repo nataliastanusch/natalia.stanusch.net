@@ -1,0 +1,26 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+{{/* Entries need no title; fall back to the section name for the tab. */}}
+{{ $t := .Title }}
+{{ if not $t }}{{ $t = .Section | humanize | title }}{{ end }}
+<title>{{ if .IsHome }}{{ or .Title site.Title }}{{ else }}{{ $t }} - {{ site.Title }}{{ end }}</title>
+
+{{ $desc := or .Description .Summary site.Params.description }}
+{{ with $desc }}<meta name="description" content="{{ . | plainify | truncate 160 }}">{{ end }}
+
+<link rel="canonical" href="{{ .Permalink }}">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="{{ "css/style.css" | relURL }}">
+
+{{ with .OutputFormats.Get "rss" }}
+  <link rel="alternate" type="application/rss+xml" href="{{ .Permalink }}" title="{{ site.Title }}">
+{{ end }}
+
+{{ partial "theme-init.html" . }}
+
+<script src="{{ "js/theme.js" | relURL }}" defer></script>

@@ -1,0 +1,7 @@
+name = "Stanusch"
+license = "MIT"
+description = "A quiet academic portfolio theme: Rubik, a crimson accent, and a particle field on the homepage."
+min_version = "0.158.0"
+
+[author]
+  name = "Built for Natalia Stanusch"

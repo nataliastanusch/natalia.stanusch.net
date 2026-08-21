@@ -1,0 +1,22 @@
+{{- /*
+  Every link written in markdown, anywhere on the site, opens in a new tab.
+
+  Only links that leave the site get `target`. Internal links - the nav,
+  tag pills, "Read more", the back link - stay in the same tab, because a
+  site that spawns a tab for its own pages is quickly unusable.
+
+  To send internal links to a new tab as well, change the line below to:
+      {{- $external := true -}}
+
+  Note: this file must not end with a newline. A render hook emits its
+  output verbatim, so a trailing newline lands in the sentence and shows
+  up as a stray space before the following comma or full stop.
+*/ -}}
+{{- $url := urls.Parse .Destination -}}
+{{- $external := and $url.Host (ne $url.Host (urls.Parse site.BaseURL).Host) -}}
+{{- printf `<a href="%s"%s%s>%s</a>`
+      (.Destination | safeURL)
+      (cond (ne .Title "") (printf ` title="%s"` .Title) "")
+      (cond $external ` target="_blank" rel="noopener noreferrer"` "")
+      (.Text | safeHTML)
+   | safeHTML -}}

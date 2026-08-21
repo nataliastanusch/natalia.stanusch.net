@@ -1,0 +1,39 @@
+baseURL      = "https://stanusch.net/"
+locale       = "en"
+title        = "Natalia Stanusch"
+theme        = "stanusch"
+
+[params]
+  # Homepage text lives in content/_index.md, not here.
+
+  linkedin = "https://www.linkedin.com/in/nataliastanusch/"
+  bluesky  = "https://bsky.app/profile/nataliastanusch.bsky.social"
+
+  # Flip to true once you have blog posts. See README.
+  enableBlog = false
+
+  description = "Natalia Stanusch - publications, projects, and press."
+
+[menu]
+  [[menu.main]]
+    name   = "publications"
+    url    = "/publications/"
+    weight = 1
+  [[menu.main]]
+    name   = "projects"
+    url    = "/projects/"
+    weight = 2
+  [[menu.main]]
+    name   = "press"
+    url    = "/press/"
+    weight = 3
+  [[menu.main]]
+    name   = "about"
+    url    = "/about/"
+    weight = 4
+
+[taxonomies]
+  tag = "tags"
+
+[markup.goldmark.renderer]
+  unsafe = true   # lets you use raw HTML inside markdown when you need it

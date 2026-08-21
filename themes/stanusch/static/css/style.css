@@ -1,0 +1,904 @@
+/* ===========================================================
+   Stanusch - a Hugo theme
+   All tunable values live in :root.
+   =========================================================== */
+
+:root {
+  /* Colour */
+  --ink:       #111111;
+
+  /* The brand colour. The hidden picker changes this one. */
+  --accent:    #9b0012;
+
+  /* What actually gets painted. Identical to --accent in light mode;
+     JS lightens it in dark mode so links stay legible. */
+  --accent-display: var(--accent);
+
+  --paper:     #ffffff;
+  --muted:     #6f6f6f;
+  --rule:      #e2e2e2;
+
+  /* Width of the centred column, padding included. Lower it for wider
+     margins, raise it for a roomier page. */
+  /* Outer width of the centred column. Derived, so it always equals the
+     text measure plus the page padding - narrow --measure and the whole
+     column narrows with it, staying centred. */
+  --shell:     calc(var(--measure) + 2 * var(--page-x));
+
+  /* Measure - how wide the text column runs inside that column. */
+  --measure:   32rem;
+
+  /* Rhythm */
+  --page-x:    1.5rem;
+  --gap-entry: 2.75rem;
+}
+
+
+/* ---------- Dark theme ---------- */
+
+/* Tokens are listed twice on purpose: once for "follow the system" and
+   once for "the reader chose dark". CSS has no way to share them. */
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ink:   #ececed;
+    --paper: #101012;
+    --muted: #9a9a9f;
+    --rule:  #2b2b31;
+  }
+  /* Fallback for the no-JavaScript case, where nothing lightens the
+     accent for us. Overridden by the inline style JS sets. */
+  @supports (color: color-mix(in srgb, red, white)) {
+    :root:not([data-theme="light"]) {
+      --accent-display: color-mix(in srgb, var(--accent) 55%, white);
+    }
+  }
+}
+
+:root[data-theme="dark"] {
+  --ink:   #ececed;
+  --paper: #101012;
+  --muted: #9a9a9f;
+  --rule:  #2b2b31;
+}
+
+/* Colour changes shouldn't strobe when the theme flips. */
+@media (prefers-reduced-motion: no-preference) {
+  body { transition: background-color 200ms ease, color 200ms ease; }
+}
+
+/* ---------- Reset ---------- */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+body, h1, h2, h3, h4, p, ul, ol, figure, blockquote { margin: 0; padding: 0; }
+
+ul.plain { list-style: none; }
+
+img, svg { display: block; max-width: 100%; }
+
+/* ---------- Buttons ---------- */
+
+/* Safari paints its own grey, system-font button chrome and ignores
+   background/font alone. `appearance: none` is what actually removes it. */
+button,
+input[type="search"] {
+  -webkit-appearance: none;
+  appearance: none;
+  font-family: inherit;
+}
+
+input[type="search"]::-webkit-search-decoration { -webkit-appearance: none; }
+
+/* ---------- Page frame ---------- */
+
+html {
+  -webkit-text-size-adjust: 100%;
+  background: var(--paper);
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Rubik', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.65;
+  color: var(--ink);
+  background: var(--paper);
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* The page is one centred column. Header, content and footer all share
+   this width, so the whole layout sits in the middle with wide white
+   margins either side. --shell is the outer width, including padding. */
+.shell {
+  width: 100%;
+  max-width: var(--shell);
+  margin-inline: auto;
+  padding-inline: var(--page-x);
+}
+
+main { flex: 1 0 auto; }
+
+/* ---------- Particle background ---------- */
+
+/* Sits behind everything, covering the whole viewport. */
+.particles-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background: var(--paper);
+}
+
+.particles-bg canvas { display: block; }
+
+/* Content floats above the field. */
+body.has-particles > main,
+body.has-particles > footer {
+  position: relative;
+  z-index: 1;
+}
+
+/* The header sits above <main> so the accent panel, which hangs below
+   the header, isn't swallowed by the content that follows it. */
+body > header {
+  position: relative;
+  z-index: 10;
+}
+
+/* ---------- Top bar ---------- */
+
+.topbar {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  column-gap: 1.1rem;
+  row-gap: 0.35rem;
+  padding-block: 1.6rem 2.2rem;
+}
+
+.site-name {
+  font-size: 1.25rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: var(--ink);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.site-name:hover,
+.site-name:focus-visible { color: var(--accent-display); }
+
+.nav {
+  display: flex;
+  flex-wrap: wrap;
+  flex: 1 1 auto;
+  min-width: 0;
+  column-gap: 0.9rem;
+  row-gap: 0.2rem;
+}
+
+.nav a {
+  font-size: 0.9rem;
+  font-weight: 400;
+  color: var(--ink);
+  text-decoration: none;
+  transition: color 120ms ease;
+}
+
+.nav a:hover,
+.nav a:focus-visible,
+.nav a[aria-current="page"] { color: var(--accent-display); }
+
+
+/* ---------- Theme toggle ---------- */
+
+.topbar { position: relative; }
+
+.theme-toggle {
+  flex: none;
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.3rem;
+  background: none;
+  border: none;
+  border-radius: 3px;
+  color: var(--ink);
+  cursor: pointer;
+  transition: color 120ms ease;
+  align-self: center;
+}
+
+.theme-toggle:hover,
+.theme-toggle:focus-visible { color: var(--accent-display); }
+
+.theme-toggle:focus-visible {
+  outline: 2px solid var(--accent-display);
+  outline-offset: 2px;
+}
+
+.theme-toggle svg { width: 19px; height: 19px; }
+
+/* Which icon shows is driven by data-mode, set in JS, so there is one
+   source of truth for "are we dark right now". */
+.theme-toggle .icon-sun  { display: none; }
+.theme-toggle[data-mode="dark"] .icon-sun  { display: block; }
+.theme-toggle[data-mode="dark"] .icon-moon { display: none; }
+
+/* ---------- Accent picker (five clicks on the header) ---------- */
+
+.accent-panel {
+  position: absolute;
+  top: 100%;
+  right: var(--page-x);
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.6rem 0.7rem;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  box-shadow: 0 6px 24px rgb(0 0 0 / 0.12);
+  font-size: 0.85rem;
+}
+
+.accent-panel[hidden] { display: none; }
+
+.accent-label { color: var(--muted); }
+
+.accent-select {
+  font: inherit;
+  font-family: inherit;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  padding: 0.2rem 0.3rem;
+}
+
+.accent-custom {
+  width: 28px;
+  height: 26px;
+  padding: 0;
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  background: none;
+  cursor: pointer;
+}
+
+.accent-reset,
+.accent-close {
+  font: inherit;
+  font-family: inherit;
+  color: var(--muted);
+  background: none;
+  border: none;
+  padding: 0.2rem 0.3rem;
+  cursor: pointer;
+  transition: color 120ms ease;
+}
+
+.accent-close { font-size: 1.1rem; line-height: 1; }
+
+.accent-reset:hover,
+.accent-close:hover,
+.accent-reset:focus-visible,
+.accent-close:focus-visible { color: var(--accent-display); }
+
+@media (max-width: 30rem) {
+  .accent-panel {
+    right: var(--page-x);
+    left: var(--page-x);
+    flex-wrap: wrap;
+  }
+}
+
+/* ---------- Home ---------- */
+
+body.home main {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-block: 3rem;
+}
+
+/* Whatever you write in content/_index.md lands here, so this styles
+   arbitrary markdown, not just a single line. */
+.home-center {
+  text-align: center;
+  max-width: 34rem;
+  font-size: 1.25rem;
+  line-height: 1.5;
+}
+
+.home-center > p { margin-bottom: 1rem; }
+
+.home-center > *:last-child { margin-bottom: 0; }
+
+.home-center h1,
+.home-center h2 {
+  font-size: 1.4rem;
+  font-weight: 500;
+  margin-bottom: 0.75rem;
+}
+
+.home-center ul,
+.home-center ol {
+  list-style: none;
+  margin-bottom: 1rem;
+}
+
+.home-center a {
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+  text-decoration-thickness: 1px;
+  transition: color 120ms ease;
+}
+
+.home-center a:hover,
+.home-center a:focus-visible { color: var(--accent-display); }
+
+/* ---------- Text pages ---------- */
+
+.prose { max-width: var(--measure); }
+
+.prose > p,
+.prose > ul,
+.prose > ol,
+.prose > blockquote { margin-bottom: 1.15rem; }
+
+.prose > *:last-child { margin-bottom: 0; }
+
+/* Deliberately smaller than .site-name: the site's name outranks the name
+   of the page you happen to be on. Weight carries it instead of size. */
+.page-title {
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: 0.005em;
+  margin-bottom: 1.9rem;
+}
+
+.page-intro { margin-bottom: 3rem; }
+
+/* Category heading - Articles, Book Chapters, and so on */
+.category {
+  font-size: 1rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  margin-top: 3.25rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--ink);
+}
+
+.category:first-of-type { margin-top: 0; }
+
+/* ---------- A single entry ---------- */
+
+.entry { margin-bottom: var(--gap-entry); }
+
+.entry:last-child { margin-bottom: 0; }
+
+/* The markdown body of the entry file. Style it however you like in the
+   file itself - these rules only set rhythm, not appearance. */
+.entry-body > p,
+.entry-body > ul,
+.entry-body > ol,
+.entry-body > blockquote { margin-bottom: 0.6rem; }
+
+.entry-body > *:last-child { margin-bottom: 0; }
+
+.entry-body ul,
+.entry-body ol { padding-left: 1.2rem; }
+
+.entry-body blockquote {
+  padding-left: 0.9rem;
+  border-left: 2px solid var(--rule);
+  color: var(--muted);
+}
+
+/* Back-link on an individual entry page */
+.back {
+  margin-top: 2.5rem;
+  font-size: 0.9rem;
+}
+
+.back a {
+  color: var(--muted);
+  text-decoration: none;
+  transition: color 120ms ease;
+}
+
+.back a:hover,
+.back a:focus-visible { color: var(--accent-display); }
+
+/* "Read more" on entries that have a page of their own */
+.entry-more {
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.entry-more a {
+  color: var(--muted);
+  text-decoration: none;
+  transition: color 120ms ease;
+}
+
+.entry-more a:hover,
+.entry-more a:focus-visible { color: var(--accent-display); }
+
+/* Visible to screen readers only */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---------- Tags ---------- */
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.6rem;
+  list-style: none;
+}
+
+.tags a {
+  font-size: 0.8rem;
+  color: var(--muted);
+  text-decoration: none;
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  padding: 0.1rem 0.45rem;
+  transition: color 120ms ease, border-color 120ms ease;
+}
+
+.tags a:hover,
+.tags a:focus-visible {
+  color: var(--accent-display);
+  border-color: var(--accent-display);
+}
+
+/* ---------- Links in body copy ---------- */
+
+/* Scoped to the containers that hold rendered markdown, rather than to
+   .prose generally - .prose also contains the tag pills, and a rule like
+   `.prose li a` would outrank `.tags a` and underline them. */
+.entry-body a,
+.page-intro a,
+.about-lede a,
+.post-body a,
+.prose > p a {
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+  text-decoration-thickness: 1px;
+  transition: color 120ms ease;
+}
+
+.entry-body a:hover,
+.entry-body a:focus-visible,
+.page-intro a:hover,
+.page-intro a:focus-visible,
+.about-lede a:hover,
+.about-lede a:focus-visible,
+.post-body a:hover,
+.post-body a:focus-visible,
+.prose > p a:hover,
+.prose > p a:focus-visible { color: var(--accent-display); }
+
+/* ---------- About page ---------- */
+
+.about-lede {
+  max-width: 44rem;
+  margin-inline: auto;
+  margin-bottom: 4rem;
+  font-size: 1.1rem;
+  line-height: 1.7;
+}
+
+.about-lede p + p { margin-top: 1.1rem; }
+
+/* ---------- Blog ---------- */
+
+.post-list { list-style: none; }
+
+.post-item { margin-bottom: 2.25rem; }
+
+.post-item a {
+  font-weight: 500;
+  text-decoration: none;
+  color: var(--ink);
+}
+
+.post-item a:hover,
+.post-item a:focus-visible { color: var(--accent-display); }
+
+.post-meta {
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.post-body h2 { font-size: 1.2rem; font-weight: 500; margin: 2rem 0 0.75rem; }
+.post-body h3 { font-size: 1.05rem; font-weight: 500; margin: 1.5rem 0 0.5rem; }
+.post-body p  { margin-bottom: 1.15rem; }
+
+
+/* ---------- Filter bar (publications, projects) ---------- */
+
+.filters {
+  margin-bottom: 2.5rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid var(--rule);
+}
+
+.filters[hidden] { display: none; }
+
+.filter-views,
+.filter-values {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.5rem;
+}
+
+.filter-values {
+  gap: 0.4rem 0.6rem;
+  margin-top: 0.85rem;
+}
+
+.filter-values[hidden] { display: none; }
+
+.filter-label {
+  font-size: 0.85rem;
+  color: var(--muted);
+  align-self: center;
+}
+
+.filter-views button {
+  font: inherit;
+  font-family: inherit;
+  font-size: 0.85rem;
+  color: var(--muted);
+  background: none;
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  padding: 0.2rem 0.6rem;
+  cursor: pointer;
+  transition: color 120ms ease, border-color 120ms ease;
+}
+
+.filter-views button:hover,
+.filter-views button:focus-visible {
+  color: var(--accent-display);
+  border-color: var(--accent-display);
+}
+
+/* Selected: outline and text in the accent, never a fill */
+.filter-views button[aria-pressed="true"] {
+  color: var(--accent-display);
+  border-color: var(--accent-display);
+}
+
+/* The tag / category chooser reuses the look of the tag pills */
+.filter-values button {
+  font: inherit;
+  font-size: 0.8rem;
+  color: var(--muted);
+  background: none;
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  padding: 0.1rem 0.45rem;
+  cursor: pointer;
+  transition: color 120ms ease, border-color 120ms ease;
+}
+
+.filter-values button:hover,
+.filter-values button:focus-visible {
+  color: var(--accent-display);
+  border-color: var(--accent-display);
+}
+
+.filter-values button[aria-pressed="true"] {
+  color: var(--paper);
+  background: var(--accent-display);
+  border-color: var(--accent-display);
+}
+
+/* Long tag lists collapse to exactly three rows until asked to expand.
+   Rows are 26px tall on a 6px gap, so three end at 90px and the fourth
+   starts at 96px - 5.7rem clips between the two and never leaves a
+   half-cut row showing. */
+.filter-values.is-collapsed {
+  max-height: 5.7rem;
+  overflow: hidden;
+}
+
+.filter-toggle {
+  font: inherit;
+  font-size: 0.8rem;
+  color: var(--muted);
+  background: none;
+  border: none;
+  padding: 0.3rem 0 0;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+  transition: color 120ms ease;
+}
+
+.filter-toggle:hover,
+.filter-toggle:focus-visible { color: var(--accent-display); }
+
+.filter-count {
+  margin-top: 0.85rem;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.filter-empty { color: var(--muted); }
+
+/* ---------- About page: text left, portrait right ---------- */
+
+/* Always a grid, so `order` can lift the portrait above the text on a
+   phone even though it comes after it in the markup. */
+.about-columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+/* Stacked on a phone: keep the portrait modest rather than full-bleed. */
+.about-photo {
+  order: -1;
+  min-width: 0;
+  margin: 0 0 2rem;
+  max-width: 13rem;
+}
+
+.about-photo img {
+  width: 100%;
+  height: auto;
+  border-radius: 2px;
+}
+
+.about-photo figcaption {
+  margin-top: 0.5rem;
+  font-size: 0.65rem;
+  line-height: 1.4;
+  color: var(--muted);
+  position: absolute;
+}
+
+/* Side by side only once there is genuinely a margin to put the photo in.
+   The negative margin lets the photo column hang outside the centred
+   column: 10rem photo + 2.5rem gap = 12.5rem of overhang, which needs
+   about 65rem of window before it fits.
+
+   Below that the portrait stacks above the text rather than sharing the
+   row. Sharing would squeeze the text to roughly two thirds of its
+   measure, so the About page would read narrower than every other page
+   on any window between 672px and 1088px. */
+@media (min-width: 65rem) {
+  .about-columns {
+    grid-template-columns: minmax(0, 1fr) 10rem;
+    gap: 2.5rem;
+    align-items: start;
+    margin-right: -12.5rem;
+  }
+
+  .about-photo {
+    order: 0;
+    margin: 0.35rem 0 0;
+    max-width: none;
+  }
+}
+
+/* ---------- Jump list at the top of a section ---------- */
+
+.category-jump { margin-bottom: 2.25rem; }
+
+.overview-title {
+  font-size: 0.95rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  margin-bottom: 0.7rem;
+}
+
+.category-jump ul {
+  list-style: none;
+}
+
+.category-jump li {
+  display: flex;
+  align-items: baseline;
+  gap: 0.55rem;
+  margin-bottom: 0.3rem;
+}
+
+.category-jump li:last-child { margin-bottom: 0; }
+
+/* Small accent lozenge in front of each category */
+.category-jump li::before {
+  content: "";
+  flex: none;
+  width: 0.42rem;
+  height: 0.42rem;
+  border-radius: 50%;
+  background: var(--accent-display);
+  transform: translateY(-0.1em);
+}
+
+.category-jump a {
+  font-size: 0.9rem;
+  color: var(--ink);
+  text-decoration: none;
+  transition: color 120ms ease;
+}
+
+
+a.overview-link {
+  /* text-decoration: underline; */
+  color: var(--accent-display);
+  display: inline-block;
+  position: relative;
+}
+a.overview-link:before {
+  content: "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~";
+  font-size: 0.7em;
+  font-weight: 400;
+  font-family: Times New Roman, Serif;
+  color: var(--accent-display);
+  width: 100%;
+  position: absolute;
+  top: 12px;
+  overflow: hidden;
+}
+
+
+
+.category-jump a:hover,
+.category-jump a:focus-visible { color: var(--accent-display); }
+
+/* Anchored headings shouldn't land flush against the top of the window */
+.category { scroll-margin-top: 1.5rem; }
+
+/* ---------- Tag search ---------- */
+
+.filter-search { margin-top: 0.85rem; }
+
+.filter-search[hidden] { display: none; }
+
+.filter-search input {
+  font: inherit;
+  font-size: 0.85rem;
+  width: 100%;
+  max-width: 18rem;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  padding: 0.3rem 0.5rem;
+}
+
+.filter-search input::placeholder { color: var(--muted); }
+
+.filter-search input:focus-visible {
+  outline: 2px solid var(--accent-display);
+  outline-offset: 1px;
+  border-color: var(--accent-display);
+}
+
+/* ---------- Back to top ---------- */
+
+.to-top {
+  margin-bottom: 1.5rem;
+  text-align: center;
+  font-size: 0.85rem;
+}
+
+/* The copy that closes each category. Long sections would otherwise
+   strand you a long way from the one in the footer. */
+.to-top--section {
+  margin: 2rem 0 0;
+  font-size: 0.8rem;
+}
+
+.to-top a {
+  color: var(--accent-display);
+  text-decoration: none;
+  transition: color 120ms ease;
+}
+
+.to-top a:hover,
+.to-top a:focus-visible { color: var(--accent-display); }
+
+/* ---------- Footer ---------- */
+
+.footer {
+  flex-shrink: 0;
+  padding-block: 3.5rem 2.25rem;
+}
+
+.social {
+  display: flex;
+  justify-content: center;   /* icons centred */
+  gap: 1.25rem;
+  align-items: center;
+  list-style: none;
+}
+
+.social a {
+  color: var(--ink);
+  display: inline-flex;
+  transition: color 120ms ease;
+}
+
+.social a:hover,
+.social a:focus-visible { color: var(--accent-display); }
+
+.social svg { width: 24px; height: 24px; }
+
+/* ---------- Focus visibility ---------- */
+
+a:focus-visible {
+  outline: 2px solid var(--accent-display);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+/* ---------- Wider screens ---------- */
+
+@media (min-width: 45rem) {
+  :root {
+    --page-x: 3rem;
+    --measure: 34rem;
+  }
+
+  body { font-size: 1.0625rem; }
+
+  /* Name + nav + toggle have to fit the width of the text column, which is
+     narrower than it used to be. These sizes leave roughly 15px of slack on
+     one row; the flex rules above keep it tidy even if that runs out. */
+  .topbar {
+    column-gap: 1.5rem;
+    padding-block: 2.25rem 3rem;
+  }
+
+  .site-name { font-size: 1.3rem; }
+
+  .nav { column-gap: 1rem; }
+
+  .nav a { font-size: 0.9rem; }
+
+  .page-title  { font-size: 1.1rem; }
+  .category    { font-size: 1.05rem; }
+  .about-lede  { font-size: 1.2rem; }
+  .home-center { font-size: 1.45rem; }
+  .home-center h1,
+  .home-center h2 { font-size: 1.6rem; }
+}
+
+/* ---------- Reduced motion ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
