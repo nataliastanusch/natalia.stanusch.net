@@ -1,0 +1,31 @@
+name: Build check
+
+# Builds on pull requests and on any branch that isn't main, so a broken
+# template or bad front matter shows up before it reaches the live site.
+on:
+  pull_request:
+  push:
+    branches-ignore: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      HUGO_VERSION: 0.165.0
+    steps:
+      - name: Install Hugo
+        run: |
+          wget -O "${{ runner.temp }}/hugo.deb" \
+            "https://github.com/gohugoio/hugo/releases/download/v${HUGO_VERSION}/hugo_extended_${HUGO_VERSION}_linux-amd64.deb"
+          sudo dpkg -i "${{ runner.temp }}/hugo.deb"
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Build
+        run: hugo --gc --minify
+
+      - name: Fail if nothing was generated
+        run: test -f public/index.html
