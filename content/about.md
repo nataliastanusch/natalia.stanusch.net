@@ -9,7 +9,7 @@ photo_credit: "© Natalia Stanusch & John Cabot University"
 
 **Natalia Stanusch** is a researcher at AI Forensics, a PhD Candidate in media studies at the University of Amsterdam, and a member of the Digital Methods Initiative.
 
-Contact: natalia[at]stanusch[dot]net
+Contact: n.b.stanusch[at]uva[dot]nl
 
 Natalia’s research foci meet at a crossing of critical data and algorithm studies, science and technology studies, and digital visual culture.
 
