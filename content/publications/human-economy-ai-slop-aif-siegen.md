@@ -1,5 +1,6 @@
 ---
 date: 2026-09-22
+publishDate: 2025-08-20
 category: "Conference Papers"
 tags: ["Agentic AI Accounts", "AI slop", "genAI imagery", "algorithmic auditing", "new media", "digital culture"]
 ---
