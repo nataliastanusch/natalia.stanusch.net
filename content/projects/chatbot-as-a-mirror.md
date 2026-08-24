@@ -4,4 +4,4 @@ category: "Invited Talks"
 tags: ["magic AI", "AI", "chatbots", "imaginaries", "AI Search"]
 ---
 
-Panelist, Chatbot as a Mirror. For *Feelings Inc. Symposium, Privacy Salon*, Rotterdam. 13 February 2025.
+Panelist, Chatbot as a Mirror. For *Feelings Inc. Symposium, Privacy Salon*, Rotterdam, the Netherlands. 13 February 2025.

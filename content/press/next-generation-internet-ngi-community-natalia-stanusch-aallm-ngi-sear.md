@@ -1,6 +1,6 @@
 ---
 date: 2025-04-14
-category: "research coverage"
+category: "interviews"
 
 ---
 
