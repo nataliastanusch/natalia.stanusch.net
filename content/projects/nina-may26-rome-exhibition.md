@@ -1,5 +1,5 @@
 ---
-date: 2026-05-8
+date: 2026-05-08
 category: "Invited Talks"
 tags: ["magic AI", "practice research", "AI", "chabots"]
 ---
