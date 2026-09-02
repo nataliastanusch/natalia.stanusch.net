@@ -84,6 +84,15 @@ window.initParticles();
     p.interactivity.status = 'mousemove';
   }
 
+  /* Clicking the field pushes new particles into it. Worth knowing whether
+     anyone notices, but only the first time - the whole homepage is the
+     hit area, so counting every click would count nothing but noise. */
+  window.addEventListener('click', function found(e) {
+    if (e.target.closest && e.target.closest('a, button, input, select, label')) return;
+    window.removeEventListener('click', found);
+    if (window.siteTrack) window.siteTrack('easter-egg-particles', { action: 'push' });
+  });
+
   // passive: the field sits behind the page, so this must never block scrolling
   window.addEventListener('touchstart', track, { passive: true });
   window.addEventListener('touchmove', track, { passive: true });

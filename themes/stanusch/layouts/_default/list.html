@@ -37,23 +37,63 @@
       {{/* Hidden until the script runs, so no-JS readers aren't shown
            controls that do nothing. The default view below is complete
            and correct on its own. */}}
-      <div class="filters" hidden>
-        <div class="filter-views" role="group" aria-label="Sort entries">
-          <span class="filter-label" aria-hidden="true">Sort by</span>
-          <button type="button" data-view="default"  aria-pressed="true">Default</button>
-          <button type="button" data-view="recent"   aria-pressed="false">Most recent</button>
-          <button type="button" data-view="tag"      aria-pressed="false">By tag</button>
-          <button type="button" data-view="category" aria-pressed="false">By category</button>
+      <div class="filters" hidden data-section="{{ .Section }}">
+
+        {{/* How the entries are arranged. Nothing here narrows the list -
+             that is the picker's job, and the two work independently. */}}
+        <div class="filter-row">
+          <span class="filter-label" id="view-label">View</span>
+
+          <div class="filter-views" role="group" aria-labelledby="view-label">
+            <button type="button" data-view="category" aria-pressed="true">By category</button>
+            <!-- <button type="button" data-view="tag"      aria-pressed="false">By tag</button>
+            <button type="button" data-view="flat"     aria-pressed="false">One list</button> -->
+          </div>
+
+          {{/* Flips between newest and oldest first. The arrow is the state:
+               its label is rewritten by filters.js on every press. */}}
+          <button type="button" class="filter-order" data-order="newest">
+            <span class="filter-order-arrow" aria-hidden="true">&darr;</span>
+            <span class="filter-order-text">Newest first</span>
+          </button>
         </div>
 
-        <div class="filter-search" hidden>
-          <label class="sr-only" for="tag-search">Search tags</label>
-          <input type="search" id="tag-search" autocomplete="off"
-                 placeholder="Type to find a tag&hellip;">
+        {{/* The picker is closed to begin with. Ninety-odd tags shown at
+             once is a wall; behind one button it is an offer. */}}
+        <div class="filter-row">
+          <span class="filter-label">Filter by</span>
+
+          <button type="button" class="filter-open"
+                  aria-expanded="false" aria-controls="tag-picker">
+            <span>Tags</span>
+            <span class="filter-open-count" hidden></span>
+            <span class="filter-open-caret" aria-hidden="true">&#9662;</span>
+          </button>
+
+          {{/* Which tags are picked, how they combine, and how many entries
+               that leaves. Sits beside the button so the current filter is
+               readable with the picker shut. Filled in by filters.js. */}}
+          <div class="filter-selection" hidden></div>
         </div>
 
-        <div class="filter-values" hidden></div>
+        <div class="tag-picker" id="tag-picker" hidden>
+          <div class="filter-search">
+            <label class="sr-only" for="tag-search">Search tags</label>
+            <input type="search" id="tag-search" autocomplete="off"
+                   placeholder="Type to find a tag&hellip;">
+          </div>
+
+          <div class="filter-values"></div>
+        </div>
       </div>
+
+      {{/* Groups for the tag picker. Edit data/tag_groups.yaml, not the
+           script - filters.js reads whatever is emitted here. */}}
+      {{ with hugo.Data.tag_groups }}
+        {{/* safeJS: jsonify already produced valid JSON, and without it the
+             script context would escape the whole thing into a JS string. */}}
+        <script type="application/json" id="tag-groups">{{ .groups | jsonify | safeJS }}</script>
+      {{ end }}
     {{ end }}
 
     <div class="entries" id="entries">

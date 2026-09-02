@@ -4,14 +4,16 @@
   {{ range site.Menus.main }}
     {{ $url  := .URL | relURL }}
     {{ $here := and (ne $url "/") (hasPrefix $page.RelPermalink $url) }}
-    <a href="{{ $url }}"{{ if $here }} aria-current="page"{{ end }}>{{ .Name }}</a>
+    <a href="{{ $url }}"{{ if $here }} aria-current="page"{{ end }}
+       data-umami-event="nav-{{ .Name | urlize }}">{{ .Name }}</a>
   {{ end }}
 
   {{/* The blog link appears only when the flag is on AND the section exists. */}}
   {{ if site.Params.enableBlog }}
     {{ with site.GetPage "/blog" }}
       {{ $here := hasPrefix $page.RelPermalink .RelPermalink }}
-      <a href="{{ .RelPermalink }}"{{ if $here }} aria-current="page"{{ end }}>blog</a>
+      <a href="{{ .RelPermalink }}"{{ if $here }} aria-current="page"{{ end }}
+         data-umami-event="nav-blog">blog</a>
     {{ end }}
   {{ end }}
 </nav>

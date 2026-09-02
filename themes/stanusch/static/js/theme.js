@@ -8,6 +8,10 @@
   var header = document.querySelector('.topbar');
   var toggle = document.querySelector('.theme-toggle');
 
+  function track(name, data) {
+    if (window.siteTrack) window.siteTrack(name, data);
+  }
+
   /* ---------- Theme toggle ---------- */
 
   function syncToggle() {
@@ -25,6 +29,7 @@
       T.write('theme', next);          // only written once they interact
       T.setTheme(next);
       syncToggle();
+      track('theme-toggle', { to: next });
     });
     syncToggle();
   }
@@ -74,8 +79,28 @@
     syncToggle();
   }
 
-  if (select) select.addEventListener('change', function () { choose(select.value); });
-  if (custom) custom.addEventListener('input',  function () { choose(custom.value); });
+  /* Dragging the colour input fires `input` on every pixel of the gradient.
+     Record where they stopped, not the hundred colours they passed over. */
+  var accentTimer = null;
+  function trackAccent(hex, via) {
+    clearTimeout(accentTimer);
+    accentTimer = setTimeout(function () {
+      track('accent-change', { colour: String(hex).toLowerCase(), via: via });
+    }, 700);
+  }
+
+  if (select) {
+    select.addEventListener('change', function () {
+      choose(select.value);
+      trackAccent(select.value, 'preset');
+    });
+  }
+  if (custom) {
+    custom.addEventListener('input', function () {
+      choose(custom.value);
+      trackAccent(custom.value, 'custom');
+    });
+  }
 
   if (reset) {
     reset.addEventListener('click', function () {
@@ -85,6 +110,7 @@
       syncToggle();
       if (custom) custom.value = T.DEFAULT_ACCENT;
       if (select) select.value = T.DEFAULT_ACCENT;
+      track('accent-reset');
     });
   }
 
@@ -108,6 +134,7 @@
     if (clicks >= 5) {
       clicks = 0;
       openPanel();
+      track('easter-egg-accent-panel', { from: location.pathname });
     }
   });
 })();

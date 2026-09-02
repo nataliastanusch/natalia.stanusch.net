@@ -1,12 +1,17 @@
 {{ with .Params.tags }}
 <ul class="tags">
   {{ range . }}
-    {{ $term := site.GetPage (printf "/tags/%s" (urlize .)) }}
+    {{ $name := . }}
+    {{/* site.Taxonomies.tags is keyed by the lower-cased tag, so this is an
+         exact match. Guessing the path with `urlize` instead breaks on any
+         tag holding "&" or "/", where the guess and the page Hugo actually
+         writes disagree and the link silently degrades to plain text. */}}
+    {{ $term := index site.Taxonomies.tags (lower $name) }}
     <li>
       {{ if $term }}
-        <a href="{{ $term.RelPermalink }}">{{ . }}</a>
+        <a href="{{ $term.Page.RelPermalink }}">{{ $name }}</a>
       {{ else }}
-        <span>{{ . }}</span>
+        <span>{{ $name }}</span>
       {{ end }}
     </li>
   {{ end }}

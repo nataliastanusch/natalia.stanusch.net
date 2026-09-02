@@ -3,6 +3,11 @@ locale       = "en"
 title        = "Natalia Stanusch"
 theme        = "stanusch"
 
+# Tag pages take their heading from the tag itself. Without this, Hugo
+# title-cases it, so "Ads & ad libraries" would head its own page as
+# "Ads & Ad Libraries" and "AI search" as "AI Search".
+titleCaseStyle = "none"
+
 [params]
   # Homepage text lives in content/_index.md, not here.
 

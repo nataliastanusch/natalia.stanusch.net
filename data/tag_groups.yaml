@@ -1,0 +1,141 @@
+# Groups for the "Filter by" tag picker on /publications/ and /projects/.
+#
+# Each entry under `groups` is a heading in the picker, and the order here is
+# the order on the page. Inside a group, `items` is a list of blocks:
+#   - a block WITH a `name` renders as a labelled subgroup
+#   - a block WITHOUT a `name` renders its tags loose, at that position
+#
+# Subgroups are supported but deliberately unused right now: one flat run of
+# tags per heading is easier to scan than headings inside headings. Add a
+# `name` to a block if a group ever grows enough to need the extra level.
+#
+# Tags are listed most-used first, because the picker shows the head of each
+# group and hides the tail behind a "+ N more" toggle. Reorder freely - the
+# picker follows this file exactly.
+#
+# Matching is case-insensitive, and the pill always shows the tag exactly as
+# it is written in the entry's front matter. A tag listed here that no entry
+# uses is simply skipped, so it is safe to list tags ahead of using them.
+# Any tag used by an entry but missing from this file collects under "Other"
+# at the end of the picker - a useful place to spot tags that need a home.
+
+groups:
+  - name: Platforms & companies
+    items:
+      - tags:
+          - chatbots
+          - TikTok
+          - Big Tech
+          - search engine
+          - recommendation algorithms
+          - Instagram
+          - Wikipedia
+          - Google
+          - OpenAI
+          - Altman
+          - ChatGPT
+          - X
+          - WhatsApp
+          - Meta
+          - Zuckerberg
+          - Metaverse
+          - virtual reality
+          # Listed ahead of use - they cost nothing until an entry uses them.
+          - Copilot
+          - Gemini
+          - Grok
+          - Facebook
+
+  - name: AI
+    items:
+      - tags:
+          - AI
+          - genAI imagery
+          - AI slop
+          - Agentic AI Accounts
+          - AI magic
+          - AI search
+          - deepfakes
+          - prompting
+          - hype
+
+  - name: Governance & policy
+    items:
+      - tags:
+          - content moderation
+          - DSA
+          - EU
+          - election integrity
+          - policy
+          - AIA
+          - Ads & ad libraries
+          - disinformation
+          - API / data access
+          - sensitive data
+          - copyrights
+
+  - name: Methods
+    items:
+      - tags:
+          - imaginaries
+          - research protocols
+          - algorithmic auditing
+          - digital methods
+          - network analysis
+          - materialism
+          - autoethnography
+          - ethnography
+          - media archaeology
+          - controversy mapping
+          - digital deterritorialization
+          - issue mapping
+          - memetic issue spaces
+          - collective ideation
+          - digital ethnography
+          - issue preclusion
+          - issue premediation
+          - wikilinks
+          - See also
+
+  - name: Fields
+    items:
+      - tags:
+          - new media
+          - digital culture
+          - visual culture
+          - platform studies
+          - critical theory
+          - art history
+          - practice research
+          - digital humanities
+          - video essay
+          - surveillance studies
+          - post-humanism
+          - STS
+
+  - name: Themes
+    items:
+      - tags:
+          - dataveillance
+          - datafication
+          - affect
+          - memes
+          - Surrealism/Dada
+          - glitch
+          - vernaculars
+          - gaze
+          - culture industry
+          - environment
+          - self-surveillance
+          - wearables
+          - digital mindfulness
+          - mindfulness technologies
+          - energy
+          - exhaustion
+          - emoji
+          - portraiture
+          - visual devices
+          - diagrams
+          - uncanny
+          - ideology
+          - cosmotechnics

@@ -151,6 +151,125 @@ after the listed ones. Nothing silently disappears.
 Tags generate their own pages at `/tags/` automatically, and each tag
 becomes a small link under the entry. Nothing to configure.
 
+#### The controls: view, order, filter
+
+`/publications/` and `/projects/` carry a bar with three independent
+controls. They used to be one control called **Sort by**, which meant
+picking a tag also changed the grouping and there was no way to narrow the
+category view at all. They are now separate, and any filter works in any
+view:
+
+| Control | Options |
+|---|---|
+| **View** | *By category* (the curated `category_order` from `_index.md`), *By tag*, *One list* |
+| **Order** | one button that flips between *↓ Newest first* and *↑ Oldest first* |
+| **Filter by** | *Tags* — opens the picker below |
+
+*By category* at *Newest first* with nothing filtered is exactly what the
+server renders, so that combination restores the original HTML rather than
+rebuilding it. Your curated order can never drift out of step with it.
+
+#### Grouping the tag picker
+
+The picker starts **closed**, behind the **Tags** button; a small badge on
+that button counts what you have picked, so a filter is never invisible.
+Which tags sit under which heading lives in `data/tag_groups.yaml`, and
+nothing else needs editing to change it:
+
+```yaml
+groups:
+  - name: AI               # a heading in the picker
+    items:
+      - tags:              # no name: one flat run of tags under it
+          - AI
+          - AI slop
+      - name: Chatbots     # a labelled subgroup, nested under the heading
+        tags: ["ChatGPT", "Gemini"]
+```
+
+Subgroups still work but are deliberately unused: headings inside headings
+were harder to scan than one flat run. Add a `name` to a block if a group
+ever grows enough to need the extra level.
+
+Order in the file is order on the page, and the file lists tags most-used
+first, because each group shows its first ten and hides the rest behind a
+"+ n more". A few things it does for you:
+
+- Matching ignores case, and the pill shows the tag as the entry spells it.
+- Each pill carries the number of entries using that tag.
+- A tag you list but haven't used yet is skipped, so you can add tags to
+  the file ahead of using them. `Copilot`, `Gemini`, `Grok` and `Facebook`
+  are sitting there now, waiting.
+- A tag you've used but haven't listed collects under **Other** at the
+  end. That group is the place to look for tags that need a home — it is
+  empty right now, and worth keeping that way.
+- A tag listed under two groups lands in the first one only.
+
+#### Renaming or merging tags
+
+`tools/retag.py` rewrites tag names across every entry's front matter. Add
+a line to `RENAMES`, run `python3 tools/retag.py --dry-run` to see what it
+would touch, then run it for real. Renaming a tag onto one that already
+exists in the same entry merges them.
+
+Two tags that meant the same thing were merged this way: `magic AI` (used
+only by projects) into `AI magic` (used only by publications), and a stray
+`elections` into `election integrity`. Remove those lines from `RENAMES`
+if you want the distinction back.
+
+#### Picking several tags at once
+
+Clicking a tag adds it to the filter; clicking it again takes it out. Pick
+two or more and a small **all / any** switch appears beside the button:
+
+- **all** — only entries carrying *every* tag picked (the default)
+- **any** — entries carrying *at least one* of them
+
+That line also counts the matches and lists what's picked, so you can drop
+a single tag with its `×` or drop the lot with **Clear**. A picked tag
+stays visible in the picker even if its group is trimmed, so nothing
+filters the list invisibly.
+
+Narrowing with **all** can easily reach nothing — two tags that never
+appear together on one entry. Rather than a blank page, that says so and
+offers to switch to **any**.
+
+#### Tags containing `/` or `&`
+
+Hugo builds the tag page's URL from the tag itself, and treats a `/` as a
+folder separator, so `Surrealism/Dada` would otherwise land at
+`/tags/surrealism/dada/` — a nested path, with a 404 at the parent. Two
+tags are pinned to sensible URLs instead:
+
+| File | Pins |
+| --- | --- |
+| `content/tags/surrealism/dada/_index.md` | `/tags/surrealism-dada/` |
+| `content/tags/api-/-data-access/_index.md` | `/tags/api-data-access/` |
+
+The odd folder names are how Hugo files those two tags internally, so
+they have to be spelled exactly that way. **Don't delete or rename those
+folders** — the tag pages move back to the ugly URLs if you do. If you
+add another tag with a `/` in it, copy the same pattern.
+
+`&` is safe by comparison: `Ads & ad libraries` sits at
+`/tags/ads--ad-libraries/`. The doubled dash is cosmetic, and that one
+can't be pinned the same way, so it's left alone.
+
+#### Renaming tags across every entry
+
+`tools/retag.py` rewrites tag names in bulk. Edit the `RENAMES` map at
+the top, then:
+
+```bash
+python3 tools/retag.py --dry-run   # show what would change
+python3 tools/retag.py             # do it
+```
+
+Renaming a tag onto one an entry already has merges the two rather than
+leaving a duplicate. Note that renaming changes the tag's URL, so the old
+`/tags/<name>/` will 404 — add `aliases` to the new tag's `_index.md` if
+that matters for a particular tag.
+
 ### URLs
 
 URLs come from the filename, so name files deliberately:
@@ -289,6 +408,86 @@ wording, so the 404 page can never end up blank.
 
 ---
 
+## The header and the kitten
+
+On every page except the homepage, the header and a small cat answer to the
+scroll direction — in opposite directions, on purpose:
+
+- **Scrolling up** — the header slides back into view, and the cat ducks
+  away. You are heading up the page and the nav is right there.
+- **Scrolling down** — the header retracts, and the cat pops up out of the
+  bottom-right corner pointing at the top of the page. Click it to go back.
+
+So exactly one way back is on screen at a time, and they never compete for
+the same corner of the eye. Neither appears within the first screen, or on
+a page too short to scroll. The header will not retract while the accent
+picker is open or while your keyboard focus is inside it.
+
+The cat is drawn in `layouts/partials/back-to-top.html` as plain SVG — no
+image file, so it takes the accent colour and inverts cleanly in dark mode.
+It squints and says *mrrp!* if you hover it. It is rendered `hidden` and
+only revealed by `js/scroll.js`, so a reader without JavaScript never gets
+a cat that cannot do anything; the "↑ Back to top" line at the end of each
+category still works for them.
+
+`prefers-reduced-motion` stills the arrow's bounce and the tail's wag, and
+makes the scroll to the top instant rather than animated.
+
+---
+
+## Analytics
+
+Umami, self-hosted at `umami.stanusch.net`, loaded from `partials/footer.html`.
+It is cookieless, and none of the events below carry anything about a
+visitor — the payloads are tag names and section names.
+
+Events are named in two places, and the split is deliberate:
+
+- **`data-umami-event="..."` in the markup** — for things the server writes
+  once and never touches again: the nav, the theme toggle, the social
+  icons. Self-documenting, and it works whether or not `analytics.js`
+  loads.
+- **`window.siteTrack(name, data)` from JavaScript** — for everything else.
+  The filter bar and the entry list are rebuilt in the browser, so an
+  attribute on a rebuilt node would never be bound. `js/analytics.js`
+  defines the helper and delegates clicks from the document, which is why
+  a tag pill still reports itself after the list has been re-rendered
+  fifteen times.
+
+Anything already carrying `data-umami-event` is skipped by the delegate, so
+no click is ever counted twice.
+
+| Event | Fires when | Carries |
+|---|---|---|
+| `nav-*` | a nav link, the site name | — |
+| `theme-toggle` | light/dark is switched | `to` |
+| `filter-view` | *By category* / *By tag* / *One list* | `section`, `view` |
+| `filter-order` | the newest/oldest arrow | `section`, `order` |
+| `filter-picker-open` | the **Tags** button opens the picker | `section` |
+| `filter-tag-add`, `filter-tag-remove` | a tag pill | `section`, `tag` |
+| `filter-mode` | the **all / any** switch | `section`, `mode` |
+| `filter-group-expand` | a "+ n more" toggle | `section`, `group` |
+| `filter-search` | a tag search, on a pause | `section`, `query`, `found` |
+| `filter-clear` | **Clear** or the **All** pill | `section` |
+| `overview-jump` | a link in the Overview list | `section`, `category` |
+| `tag-link` | a tag under an entry | `tag` |
+| `entry-read-more` | a "Read more" link | `entry` |
+| `outbound` | any link leaving the site (DOIs, press) | `url` |
+| `back-to-top` | the kitten or a text link | `via` |
+| `easter-egg-accent-panel` | five clicks on the header | — |
+| `easter-egg-particles` | first click on the homepage field | — |
+| `easter-egg-kitten` | someone clicks the cat five times | — |
+
+`filter-search` records what people typed **and whether it matched
+anything**. A run of misses is a list of tags worth adding.
+
+Two things are throttled rather than sent per-event, because they would
+otherwise be pure noise: a tag search waits for you to stop typing, and the
+accent colour input records where you stopped dragging rather than every
+colour you passed over.
+
+---
+
 ## Things you'll likely want to change
 
 In **`hugo.toml`**:
@@ -322,6 +521,11 @@ content/            your writing - this is the only folder you edit day to day
   publications/
   projects/
   press/
+  tags/             tag page intros, plus the two url pins (see Tags)
+data/
+  tag_groups.yaml   the groups in the tag picker
+tools/
+  retag.py          bulk-rename tags across every entry
 themes/stanusch/
   layouts/
     _default/       page templates (list, single, about, taxonomy)
@@ -331,6 +535,9 @@ themes/stanusch/
     index.html      the homepage
   static/
     css/style.css
+    js/filters.js            the view / order / filter controls
+    js/analytics.js          siteTrack() + delegated umami events
+    js/scroll.js             retracting header, the back-to-top kitten
     js/theme.js              toggle + accent picker
     js/particles-config.js
     js/particles.js          vendored library
