@@ -6,7 +6,8 @@ title: "Publications"
 category_order:
   - "Academic Publications"
   - "Book Chapters"
+  - "Professional Publications"
   - "Conference Proceedings"
   - "Conference Papers"
-  - "Professional Publications"
+
 ---
