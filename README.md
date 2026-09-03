@@ -151,28 +151,71 @@ after the listed ones. Nothing silently disappears.
 Tags generate their own pages at `/tags/` automatically, and each tag
 becomes a small link under the entry. Nothing to configure.
 
-#### The controls: view, order, filter
+#### The controls: order and filter
 
-`/publications/` and `/projects/` carry a bar with three independent
-controls. They used to be one control called **Sort by**, which meant
-picking a tag also changed the grouping and there was no way to narrow the
-category view at all. They are now separate, and any filter works in any
-view:
+`/publications/` and `/projects/` carry a bar with two controls:
 
-| Control | Options |
+| Control | What it does |
 |---|---|
-| **View** | *By category* (the curated `category_order` from `_index.md`), *By tag*, *One list* |
 | **Order** | one button that flips between *↓ Newest first* and *↑ Oldest first* |
 | **Filter by** | *Tags* — opens the picker below |
 
-*By category* at *Newest first* with nothing filtered is exactly what the
-server renders, so that combination restores the original HTML rather than
-rebuilding it. Your curated order can never drift out of step with it.
+Entries are always grouped under their category headings, in the curated
+`category_order` from `_index.md`. Newest-first with nothing picked is
+exactly what the server renders, so that combination restores the original
+HTML rather than rebuilding it, and your curated order can never drift.
+
+There used to be a third control, **View**, offering *By tag* and *One
+list*. Both are gone. *By tag* listed every entry once per tag it carried,
+so filtering down to two entries rendered twenty-three cards under
+twenty-three headings; *One list* was the category view with the only
+useful thing about it removed.
+
+#### Why tags combine with "any" by default
+
+Pick two tags and you get entries carrying **either** of them. That is the
+opposite of what most tag filters do, and it is deliberate: across this
+site's ninety tags, **68% of all tag pairs share no entry at all**. With
+"all" as the default, adding a second tag emptied the page more often than
+not, which read as the filter being broken rather than as a real answer.
+
+Because every tag in the picker is carried by at least one entry, an "any"
+filter can never match nothing. The page cannot go blank underneath you.
+
+**all** is still one click away in the picker's footer, for narrowing on
+purpose — and when it genuinely matches nothing it says so and offers to
+switch back rather than leaving a blank page.
 
 #### Grouping the tag picker
 
-The picker starts **closed**, behind the **Tags** button; a small badge on
-that button counts what you have picked, so a filter is never invisible.
+The picker behaves differently either side of **78rem (1248px)**, because
+above that width there is enough white space beside the text column to give
+it a column of its own.
+
+**Wide windows — the picker is a rail.** It sits in the left margin, always
+open, running its full height. There is nothing to open and nothing to
+dismiss, so the **Tags** button and **Done** both disappear, and the list
+does not scroll inside itself — the page scrolls, which is what people
+expect to do anyway. Filter, selection and results are all on screen at
+once. The **Newest first** control stays under the Overview, in the text
+column with the results it orders.
+
+The rail is *floated* with a negative left margin rather than positioned.
+Two consequences worth knowing if you ever touch it: the text column does
+not move by a single pixel from where it sits at every other width, and
+because `display: flow-root` is on `.prose` (and deliberately not on
+`.filters`), the float escapes the filter bar and makes the whole column
+grow to contain it. Positioning it absolutely instead would let a rail
+taller than a filtered result list spill straight through the footer. It is
+the same trick the About portrait uses to hang into the right margin,
+mirrored.
+
+**Narrower windows — the picker is a panel.** It starts closed behind the
+**Tags** button, with a badge counting what you have picked so a filter is
+never invisible, and it scrolls inside a fixed height rather than growing
+the page. Left unbounded it ran several screens tall, and filtering then
+collapsed the document under a reader who had scrolled into it.
+
 Which tags sit under which heading lives in `data/tag_groups.yaml`, and
 nothing else needs editing to change it:
 
@@ -192,8 +235,31 @@ were harder to scan than one flat run. Add a `name` to a block if a group
 ever grows enough to need the extra level.
 
 Order in the file is order on the page, and the file lists tags most-used
-first, because each group shows its first ten and hides the rest behind a
-"+ n more". A few things it does for you:
+first, so the tags you reach for are the ones already on screen.
+
+**Every tag is shown — nothing is hidden behind a toggle.** Groups used to
+show ten and hide the rest behind a "+ n more", but expanding one shoved
+everything below it down the panel, so hunting for a tag meant the picker
+kept moving under you.
+
+In the rail there is nothing more to do: the list simply runs its length.
+In the panel it scrolls inside its fixed height, and three things tell you
+where you are (all of which take themselves away in the rail, since there
+is no scrollbox to explain):
+
+- the count beside each group heading, so you can see a group holds
+  twenty-three tags whether or not they all fit
+- a soft fade at whichever edge has more behind it
+- a small **n more ⌄** button at the bottom right, which counts what is
+  still below and pages down when clicked. At the end it turns into
+  **Top ⌃** rather than vanishing under the cursor that was just using it.
+
+Group headings are sticky, so you always know which group you are looking
+at however far down you have scrolled. Picking a tag no longer rebuilds the
+picker either — the pill just flips — so your place in the list and the
+focus ring both survive the click.
+
+A few other things the file does for you:
 
 - Matching ignores case, and the pill shows the tag as the entry spells it.
 - Each pill carries the number of entries using that tag.
@@ -219,20 +285,12 @@ if you want the distinction back.
 
 #### Picking several tags at once
 
-Clicking a tag adds it to the filter; clicking it again takes it out. Pick
-two or more and a small **all / any** switch appears beside the button:
-
-- **all** — only entries carrying *every* tag picked (the default)
-- **any** — entries carrying *at least one* of them
-
-That line also counts the matches and lists what's picked, so you can drop
-a single tag with its `×` or drop the lot with **Clear**. A picked tag
-stays visible in the picker even if its group is trimmed, so nothing
-filters the list invisibly.
-
-Narrowing with **all** can easily reach nothing — two tags that never
-appear together on one entry. Rather than a blank page, that says so and
-offers to switch to **any**.
+Clicking a tag adds it to the filter; clicking it again takes it out. The
+line under the bar counts the matches and lists what's picked, so you can
+drop a single tag with its `×` or drop the lot with **Clear** — all of it
+readable with the picker shut. **Done** closes the picker and puts you back
+on the results. A picked tag stays visible in the picker even if its group
+is trimmed, so nothing filters the list invisibly.
 
 #### Tags containing `/` or `&`
 
@@ -461,12 +519,11 @@ no click is ever counted twice.
 |---|---|---|
 | `nav-*` | a nav link, the site name | — |
 | `theme-toggle` | light/dark is switched | `to` |
-| `filter-view` | *By category* / *By tag* / *One list* | `section`, `view` |
 | `filter-order` | the newest/oldest arrow | `section`, `order` |
 | `filter-picker-open` | the **Tags** button opens the picker | `section` |
 | `filter-tag-add`, `filter-tag-remove` | a tag pill | `section`, `tag` |
 | `filter-mode` | the **all / any** switch | `section`, `mode` |
-| `filter-group-expand` | a "+ n more" toggle | `section`, `group` |
+| `filter-tag-scroll` | the **n more ⌄** / **Top ⌃** button | `section`, `dir` |
 | `filter-search` | a tag search, on a pause | `section`, `query`, `found` |
 | `filter-clear` | **Clear** or the **All** pill | `section` |
 | `overview-jump` | a link in the Overview list | `section`, `category` |

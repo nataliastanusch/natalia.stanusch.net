@@ -1,18 +1,31 @@
-/* The controls above a section's entries. Three independent things:
+/* The controls above a section's entries. Two things only:
 
-     View     how entries are grouped - by category, by tag, or one list
      Order    newest first or oldest first
      Filter   which tags an entry must carry to show at all
 
-   They used to be one control labelled "Sort by", which meant picking a tag
-   also changed the grouping, and there was no way to narrow the category
-   view at all. Splitting them means any filter works in any view.
+   Entries are always grouped under their category headings, in the curated
+   order from _index.md. There used to be a "View" control offering "By
+   tag" and "One list" as well; both are gone. "By tag" listed every entry
+   once per tag it carried, so filtering to two entries could render
+   twenty-three cards under twenty-three headings, and "One list" was the
+   category view with the only useful thing about it removed.
 
-   "By category" at newest-first with nothing filtered is exactly what the
-   server rendered, so that combination restores the original HTML verbatim
-   rather than rebuilding it. The curated category order can never drift.
+   Two rules keep the page from going blank under the reader:
 
-   The tag picker arranges its pills under the groups defined in
+     - Tags combine with "any" by default, not "all". Every tag in the
+       picker is carried by at least one entry, so an "any" filter can
+       never match nothing. "all" is still there, one click away, for
+       narrowing on purpose - and it says so when it finds nothing.
+
+     - The picker scrolls inside a fixed height instead of growing the
+       page. An open picker used to run several screens tall, so filtering
+       collapsed the document under someone who had scrolled into it.
+
+   Newest-first with nothing picked is exactly what the server rendered, so
+   that combination restores the original HTML rather than rebuilding it.
+   The curated category order can never drift.
+
+   The picker arranges its pills under the groups defined in
    data/tag_groups.yaml. That file is the only place the arrangement is
    written down - nothing below hard-codes a tag name. */
 (function () {
@@ -21,7 +34,6 @@
   if (!root || !bar) return;
 
   var section   = bar.getAttribute('data-section') || '';
-  var viewBar   = bar.querySelector('.filter-views');
   var orderBtn  = bar.querySelector('.filter-order');
   var openBtn   = bar.querySelector('.filter-open');
   var openCount = bar.querySelector('.filter-open-count');
@@ -29,11 +41,17 @@
   var searchIn  = bar.querySelector('#tag-search');
   var valueBar  = bar.querySelector('.filter-values');
   var selBar    = bar.querySelector('.filter-selection');
+  var modeBox   = bar.querySelector('.picker-mode');
+  var doneBtn   = bar.querySelector('.picker-done');
+  var scroller  = bar.querySelector('.tag-scroller');
+  var moreBtn   = bar.querySelector('.tag-more');
+  var moreText  = moreBtn && moreBtn.querySelector('.tag-more-text');
+  var moreCaret = moreBtn && moreBtn.querySelector('.tag-more-caret');
 
   var defaultHTML = root.innerHTML;
 
   /* The curated category order, read back off the page the server sent, so
-     a rebuilt category view can't disagree with the Overview list. */
+     a rebuilt list can't disagree with the Overview links above it. */
   var categoryOrder = Array.prototype.map.call(
     root.querySelectorAll('h2.category'),
     function (h) { return h.textContent; }
@@ -52,28 +70,30 @@
   if (!items.length) return;
 
   /* `picked` holds every chosen tag, in the order they were clicked.
-     `mode` is how they combine: 'all' wants an entry carrying every one of
-     them, 'any' wants an entry carrying at least one. */
-  var state = {
-    view: 'category',
-    order: 'newest',
-    picked: [],
-    mode: 'all',
-    query: ''
-  };
+     `mode` is how they combine: 'any' wants an entry carrying at least one
+     of them, 'all' wants an entry carrying every one. */
+  var state = { order: 'newest', picked: [], mode: 'any', query: '' };
 
-  /* Only reached if data/tag_groups.yaml is missing or unreadable, when the
-     picker falls back to one flat alphabetical run. */
-  var FLAT_COLLAPSE_OVER = 24;
-  var flatExpanded = false;
+  /* Every tag is rendered, always. Groups used to show ten and hide the
+     rest behind a "+ n more" toggle, but expanding one shoved everything
+     below it down the page, so finding a tag meant the picker kept moving
+     under you. The list scrolls instead, and the button under it says how
+     much is left - the panel is the same height however deep you are. */
 
-  /* Each group shows this many tags, then hides the tail behind a toggle of
-     its own, so no single group crowds out the rest. */
-  var GROUP_SHOW = 10;
-  var openGroups = {};
+  /* Every pill button, keyed by tag. A click flips the pressed state in
+     place rather than rebuilding the picker, which would lose the scroll
+     position and the focus ring on the pill just clicked. */
+  var pillIndex = {};
 
   var reduceMotion = window.matchMedia &&
                      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* Wide enough for the picker to live in the left margin as a column of
+     its own. There it is always open and runs its full height - there is
+     no panel to dismiss, and no reason to scroll it inside itself when the
+     page scrolls perfectly well. Must match the breakpoint in style.css. */
+  var railMQ = window.matchMedia ? window.matchMedia('(min-width: 78rem)') : null;
+  function isRail() { return !!(railMQ && railMQ.matches); }
 
   function track(name, data) {
     if (window.siteTrack) window.siteTrack(name, data);
@@ -98,12 +118,12 @@
 
   function sorted(list) { return list.slice().sort(byDate); }
 
+  function byName(a, b) { return a.localeCompare(b); }
+
   function unique(list) {
     var seen = {}, out = [];
-    list.forEach(function (v) {
-      if (v && !seen[v]) { seen[v] = 1; out.push(v); }
-    });
-    return out.sort(function (a, b) { return a.localeCompare(b); });
+    list.forEach(function (v) { if (v && !seen[v]) { seen[v] = 1; out.push(v); } });
+    return out.sort(byName);
   }
 
   /* Must agree with Hugo's `urlize`, which builds the ids on the headings. */
@@ -183,31 +203,6 @@
 
   var grouped = tagPlan.length > 0;
 
-  /* Tag order for the headings in the entry list, so it reads in the same
-     sequence as the picker rather than one long alphabetical run. */
-  var tagOrder = {};
-  var tagGroupOf = {};
-  (function () {
-    var n = 0;
-    tagPlan.forEach(function (group) {
-      group.blocks.forEach(function (block) {
-        block.tags.forEach(function (t) {
-          tagOrder[t] = n++;
-          tagGroupOf[t] = group.name;
-        });
-      });
-    });
-  })();
-
-  function byTagOrder(a, b) {
-    var x = tagOrder.hasOwnProperty(a) ? tagOrder[a] : Infinity;
-    var y = tagOrder.hasOwnProperty(b) ? tagOrder[b] : Infinity;
-    if (x !== y) return x - y;
-    return a.localeCompare(b);
-  }
-
-  function byName(a, b) { return a.localeCompare(b); }
-
   function isPicked(tag) { return state.picked.indexOf(tag) > -1; }
 
   function matching() {
@@ -228,17 +223,29 @@
       track('filter-tag-remove', ev({ tag: tag }));
     } else {
       state.picked.push(tag);
-      track('filter-tag-add', ev({ tag: tag, view: state.view }));
+      track('filter-tag-add', ev({ tag: tag, mode: state.mode }));
     }
     refresh();
   }
 
   function refresh() {
-    renderValues();
+    syncPills();
     renderSelection();
+    renderMode();
     renderCount();
     draw();
   }
+
+  /* The pills are already on the page; only which of them read as pressed
+     has changed. */
+  function syncPills() {
+    Object.keys(pillIndex).forEach(function (t) {
+      var on = String(isPicked(t));
+      pillIndex[t].forEach(function (b) { b.setAttribute('aria-pressed', on); });
+    });
+  }
+
+  /* ---------- rendering: entries ---------- */
 
   /* Matches the one the server puts at the end of each category. */
   function backToTop() {
@@ -251,10 +258,10 @@
     return p;
   }
 
-  function heading(text, prefix) {
+  function heading(text) {
     var h = document.createElement('h2');
     h.className = 'category';
-    h.id = prefix + '-' + slugify(text);
+    h.id = 'cat-' + slugify(text);
     h.textContent = text;
     return h;
   }
@@ -264,16 +271,6 @@
     p.className = 'filter-empty';
     p.textContent = text;
     return p;
-  }
-
-  /* ---------- rendering: entries ---------- */
-
-  function renderFlat(list) {
-    root.innerHTML = '';
-    sorted(list).forEach(function (i) {
-      root.appendChild(i.node.cloneNode(true));
-    });
-    root.appendChild(backToTop());
   }
 
   function renderByCategory(list) {
@@ -292,7 +289,7 @@
     });
 
     names.forEach(function (n) {
-      root.appendChild(heading(n, 'cat'));
+      root.appendChild(heading(n));
       sorted(groups[n]).forEach(function (i) {
         root.appendChild(i.node.cloneNode(true));
       });
@@ -300,116 +297,61 @@
     });
   }
 
-  function renderByTag(list) {
-    root.innerHTML = '';
-    var groups = {};
-
-    list.forEach(function (i) {
-      var keys = i.tags.length ? i.tags : ['Untagged'];
-      keys.forEach(function (k) { (groups[k] = groups[k] || []).push(i); });
-    });
-
-    var names = Object.keys(groups).sort(grouped ? byTagOrder : byName);
-    var lastGroup = null;
-
-    names.forEach(function (n) {
-      if (grouped) {
-        var g = tagGroupOf.hasOwnProperty(n) ? tagGroupOf[n] : 'Other';
-        if (g !== lastGroup) {
-          var label = document.createElement('p');
-          label.className = 'tag-run';
-          label.textContent = g;
-          root.appendChild(label);
-          lastGroup = g;
-        }
-      }
-      /* Prefixed 'tag' rather than 'cat' so a tag and a category sharing a
-         name can't produce two elements with the same id. */
-      root.appendChild(heading(n, 'tag'));
-      sorted(groups[n]).forEach(function (i) {
-        root.appendChild(i.node.cloneNode(true));
-      });
-      root.appendChild(backToTop());
-    });
-  }
-
-  /* "all" of two unrelated tags often matches nothing. Say so, and offer
-     the switch rather than leaving a blank page. */
+  /* Only reachable in "all" mode - see the note at the top of the file. */
   function renderNothing() {
     root.innerHTML = '';
-    root.appendChild(emptyNote(state.picked.length > 1
-      ? 'No entry carries all of those tags.'
-      : 'Nothing here.'));
+    root.appendChild(emptyNote('No entry carries all of those tags.'));
 
-    if (state.mode === 'all' && state.picked.length > 1) {
-      var b = document.createElement('button');
-      b.type = 'button';
-      b.className = 'filter-empty-action';
-      b.textContent = 'Show entries with any of them instead';
-      b.addEventListener('click', function () {
-        state.mode = 'any';
-        track('filter-mode', ev({ mode: 'any', from: 'empty-state' }));
-        renderSelection();
-        draw();
-      });
-      root.appendChild(b);
-    }
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'filter-empty-action';
+    b.textContent = 'Show entries with any of them instead';
+    b.addEventListener('click', function () {
+      setMode('any', 'empty-state');
+    });
+    root.appendChild(b);
   }
 
   function draw() {
-    var list = matching();
-
     /* The one combination the server already rendered. Restoring it beats
        rebuilding it: no chance of the curated order drifting. */
-    if (state.view === 'category' && state.order === 'newest' && !state.picked.length) {
+    if (state.order === 'newest' && !state.picked.length) {
       root.innerHTML = defaultHTML;
       return;
     }
 
+    var list = matching();
     if (!list.length) { renderNothing(); return; }
-
-    if (state.view === 'flat') { renderFlat(list); return; }
-    if (state.view === 'tag')  { renderByTag(list); return; }
     renderByCategory(list);
   }
 
   /* ---------- rendering: the picker ---------- */
 
-  function pill(label, tag) {
+  function pill(tag) {
     var b = document.createElement('button');
     b.type = 'button';
+    var n = tagCount[tag] || 0;
 
-    if (tag === null) {
-      /* The "All" pill, which just empties the selection. */
-      b.textContent = label;
-      b.setAttribute('aria-pressed', String(!state.picked.length));
-    } else {
-      var n = tagCount[tag] || 0;
-      b.appendChild(document.createTextNode(label));
-      var c = document.createElement('span');
-      c.className = 'pill-count';
-      c.setAttribute('aria-hidden', 'true');
-      c.textContent = n;
-      b.appendChild(c);
-      /* The count reads as a stray number otherwise. */
-      b.setAttribute('aria-label', label + ', ' + n + (n === 1 ? ' entry' : ' entries'));
-      b.setAttribute('aria-pressed', String(isPicked(tag)));
-    }
+    b.appendChild(document.createTextNode(tag));
+    var c = document.createElement('span');
+    c.className = 'pill-count';
+    c.setAttribute('aria-hidden', 'true');
+    c.textContent = n;
+    b.appendChild(c);
 
-    b.addEventListener('click', function () {
-      if (tag !== null) { togglePick(tag); return; }
-      if (!state.picked.length) return;
-      state.picked = [];
-      track('filter-clear', ev({ from: 'all-pill' }));
-      refresh();
-    });
+    /* The count would otherwise read as a stray number. */
+    b.setAttribute('aria-label', tag + ', ' + n + (n === 1 ? ' entry' : ' entries'));
+    b.setAttribute('aria-pressed', String(isPicked(tag)));
+    b.addEventListener('click', function () { togglePick(tag); });
+
+    (pillIndex[tag] = pillIndex[tag] || []).push(b);
     return b;
   }
 
   function pillRow(tags) {
     var row = document.createElement('div');
     row.className = 'tag-pills';
-    tags.forEach(function (t) { row.appendChild(pill(t, t)); });
+    tags.forEach(function (t) { row.appendChild(pill(t)); });
     return row;
   }
 
@@ -417,11 +359,13 @@
     valueBar.appendChild(emptyNote('No tag matches \u201c' + state.query.trim() + '\u201d.'));
   }
 
-  /* Rebuilds the pills only. The search input lives outside this
-     container so typing never costs it focus. */
+  /* Rebuilds the pills. Called when the search changes and when the picker
+     opens - never on a pick, which goes through syncPills instead. */
   function renderValues() {
+    var top = valueBar.scrollTop;     // don't throw the reader back to the first group
     valueBar.innerHTML = '';
-    valueBar.classList.remove('is-collapsed', 'is-grouped');
+    valueBar.classList.remove('is-grouped');
+    pillIndex = {};
 
     var q = state.query.trim().toLowerCase();
     function hit(v) { return !q || v.toLowerCase().indexOf(q) > -1; }
@@ -430,37 +374,14 @@
        alphabetical run, the way this looked before the groups existed. */
     if (!grouped) {
       var values = allTags.filter(hit);
-      if (q && !values.length) { noMatch(); return; }
-
-      valueBar.classList.toggle('is-collapsed',
-        !q && values.length > FLAT_COLLAPSE_OVER && !flatExpanded);
-
-      if (!q) valueBar.appendChild(pill('All', null));
-      values.forEach(function (v) { valueBar.appendChild(pill(v, v)); });
-
-      if (!q && values.length > FLAT_COLLAPSE_OVER) {
-        var t = document.createElement('button');
-        t.type = 'button';
-        t.className = 'filter-toggle';
-        t.textContent = flatExpanded ? 'Show fewer' : 'Show all ' + values.length;
-        t.addEventListener('click', function () {
-          flatExpanded = !flatExpanded;
-          renderValues();
-        });
-        valueBar.appendChild(t);
-      }
+      if (q && !values.length) { noMatch(); updateMore(); return; }
+      values.forEach(function (v) { valueBar.appendChild(pill(v)); });
+      valueBar.scrollTop = top;
+      updateMore();
       return;
     }
 
     valueBar.classList.add('is-grouped');
-
-    if (!q) {
-      var allRow = document.createElement('div');
-      allRow.className = 'tag-pills tag-pills--all';
-      allRow.appendChild(pill('All', null));
-      valueBar.appendChild(allRow);
-    }
-
     var shown = 0;
 
     tagPlan.forEach(function (group) {
@@ -473,30 +394,23 @@
       var wrap = document.createElement('div');
       wrap.className = 'tag-group';
 
+      var total = blocks.reduce(function (n, b) { return n + b.tags.length; }, 0);
+      shown += total;
+
+      /* Sticky, so you always know which group you are looking at however
+         far down the list you have scrolled. */
       var title = document.createElement('p');
       title.className = 'tag-group-title';
-      title.textContent = group.name;
+      title.appendChild(document.createTextNode(group.name));
+
+      var gcount = document.createElement('span');
+      gcount.className = 'tag-group-count';
+      gcount.setAttribute('aria-hidden', 'true');
+      gcount.textContent = total;
+      title.appendChild(gcount);
       wrap.appendChild(title);
 
-      /* A group with nothing nested and a long tail gets a toggle. A search
-         result is already short, so it is never trimmed. */
-      var simple = blocks.length === 1 && !blocks[0].name;
-      var tail = 0;
-
       blocks.forEach(function (b) {
-        var tags = b.tags;
-
-        if (simple && !q && tags.length > GROUP_SHOW && !openGroups[group.name]) {
-          var head = tags.slice(0, GROUP_SHOW);
-          /* A picked tag in the hidden tail would otherwise vanish while
-             still filtering the list, so pull it back into view. */
-          var strays = tags.slice(GROUP_SHOW).filter(isPicked);
-          tail = tags.length - head.length - strays.length;
-          tags = head.concat(strays);
-        }
-
-        shown += tags.length;
-
         if (b.name) {
           var sub = document.createElement('div');
           sub.className = 'tag-subgroup';
@@ -504,58 +418,87 @@
           subTitle.className = 'tag-subgroup-title';
           subTitle.textContent = b.name;
           sub.appendChild(subTitle);
-          sub.appendChild(pillRow(tags));
+          sub.appendChild(pillRow(b.tags));
           wrap.appendChild(sub);
         } else {
-          wrap.appendChild(pillRow(tags));
+          wrap.appendChild(pillRow(b.tags));
         }
       });
-
-      if (simple && !q && (tail || openGroups[group.name])) {
-        var more = document.createElement('button');
-        more.type = 'button';
-        more.className = 'filter-toggle';
-        more.textContent = openGroups[group.name] ? 'Show fewer' : '+ ' + tail + ' more';
-        more.addEventListener('click', function () {
-          openGroups[group.name] = !openGroups[group.name];
-          track('filter-group-expand',
-                ev({ group: group.name, open: openGroups[group.name] ? 'yes' : 'no' }));
-          renderValues();
-        });
-        wrap.appendChild(more);
-      }
 
       valueBar.appendChild(wrap);
     });
 
     if (q && !shown) noMatch();
+    valueBar.scrollTop = top;
+    updateMore();
+  }
+
+  /* ---------- the scroll, made visible ---------- */
+
+  /* How many pills sit below the fold right now. Counted rather than
+     estimated, because the pills wrap and a row holds anywhere between two
+     and six of them depending on how long the tags are. */
+  function hiddenBelow() {
+    var limit = valueBar.scrollTop + valueBar.clientHeight - 2;
+    var pills = valueBar.querySelectorAll('button');
+    var n = 0;
+    for (var i = 0; i < pills.length; i++) {
+      if (pills[i].offsetTop + pills[i].offsetHeight > limit) n++;
+    }
+    return n;
+  }
+
+  /* Drives the fades at either edge and the button under them. Runs on
+     scroll, on resize, and after any rebuild - anything that can change
+     where the list has been cut off. */
+  function updateMore() {
+    if (!scroller) return;
+
+    var over = valueBar.scrollHeight - valueBar.clientHeight > 2;
+    scroller.classList.toggle('is-scrollable', over);
+
+    if (!over) {
+      /* Everything fits: no fades, and nothing to offer. */
+      scroller.classList.add('is-top', 'is-end');
+      if (moreBtn) moreBtn.hidden = true;
+      return;
+    }
+
+    var atTop = valueBar.scrollTop <= 2;
+    var atEnd = valueBar.scrollTop + valueBar.clientHeight >= valueBar.scrollHeight - 2;
+    scroller.classList.toggle('is-top', atTop);
+    scroller.classList.toggle('is-end', atEnd);
+
+    if (!moreBtn) return;
+    moreBtn.hidden = false;
+
+    if (atEnd) {
+      /* Nothing left below, so the button turns into the way back rather
+         than vanishing under the cursor that was just paging with it. */
+      moreBtn.dataset.dir = 'up';
+      moreText.textContent = 'Top';
+      moreCaret.textContent = '\u2303';
+      moreBtn.setAttribute('aria-label', 'Back to the first group of tags');
+    } else {
+      var n = hiddenBelow();
+      moreBtn.dataset.dir = 'down';
+      moreText.textContent = n + ' more';
+      moreCaret.textContent = '\u2304';
+      moreBtn.setAttribute('aria-label',
+        n + (n === 1 ? ' more tag' : ' more tags') + ' below. Scroll down.');
+    }
+  }
+
+  function scrollValues(to) {
+    /* scrollTo with options isn't everywhere, and isn't in jsdom. */
+    if (valueBar.scrollTo) {
+      valueBar.scrollTo({ top: to, behavior: reduceMotion ? 'auto' : 'smooth' });
+    } else {
+      valueBar.scrollTop = to;
+    }
   }
 
   /* ---------- rendering: what's currently picked ---------- */
-
-  function modeSwitch() {
-    var group = document.createElement('span');
-    group.className = 'selection-mode';
-    group.setAttribute('role', 'group');
-    group.setAttribute('aria-label', 'Combine tags');
-
-    ['all', 'any'].forEach(function (m) {
-      var b = document.createElement('button');
-      b.type = 'button';
-      b.textContent = m;
-      b.setAttribute('aria-pressed', String(state.mode === m));
-      b.addEventListener('click', function () {
-        if (state.mode === m) return;
-        state.mode = m;
-        track('filter-mode', ev({ mode: m, tags: state.picked.length }));
-        renderSelection();
-        draw();
-      });
-      group.appendChild(b);
-    });
-
-    return group;
-  }
 
   function word(text) {
     var s = document.createElement('span');
@@ -577,14 +520,9 @@
     count.textContent = n + (n === 1 ? ' entry' : ' entries');
     selBar.appendChild(count);
 
-    /* One tag combines with nothing, so the switch would only be noise. */
-    if (state.picked.length > 1) {
-      selBar.appendChild(word('with'));
-      selBar.appendChild(modeSwitch());
-      selBar.appendChild(word('of'));
-    } else {
-      selBar.appendChild(word('tagged'));
-    }
+    selBar.appendChild(word(
+      state.picked.length === 1 ? 'tagged'
+        : state.mode === 'all' ? 'tagged with all of' : 'tagged with any of'));
 
     state.picked.forEach(function (t) {
       var b = document.createElement('button');
@@ -607,10 +545,38 @@
     clear.textContent = 'Clear';
     clear.addEventListener('click', function () {
       state.picked = [];
-      track('filter-clear', ev({ from: 'clear-button' }));
+      track('filter-clear', ev({}));
       refresh();
     });
     selBar.appendChild(clear);
+  }
+
+  /* One tag combines with nothing, so the switch would only be noise. */
+  function renderMode() {
+    if (!modeBox) return;
+    modeBox.innerHTML = '';
+
+    if (state.picked.length < 2) { modeBox.hidden = true; return; }
+    modeBox.hidden = false;
+
+    modeBox.appendChild(word('matching'));
+
+    var group = document.createElement('span');
+    group.className = 'selection-mode';
+    group.setAttribute('role', 'group');
+    group.setAttribute('aria-label', 'Combine tags');
+
+    ['any', 'all'].forEach(function (m) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.textContent = m;
+      b.setAttribute('aria-pressed', String(state.mode === m));
+      b.addEventListener('click', function () { setMode(m, 'switch'); });
+      group.appendChild(b);
+    });
+
+    modeBox.appendChild(group);
+    modeBox.appendChild(word('of them'));
   }
 
   /* The badge on the closed picker, so an active filter is never invisible. */
@@ -625,16 +591,11 @@
 
   /* ---------- controls ---------- */
 
-  function setView(name) {
-    if (state.view === name) return;
-    state.view = name;
-
-    Array.prototype.forEach.call(viewBar.querySelectorAll('button'), function (b) {
-      b.setAttribute('aria-pressed', String(b.getAttribute('data-view') === name));
-    });
-
-    track('filter-view', ev({ view: name, tags: state.picked.length }));
-    draw();
+  function setMode(m, from) {
+    if (state.mode === m) return;
+    state.mode = m;
+    track('filter-mode', ev({ mode: m, from: from, tags: state.picked.length }));
+    refresh();
   }
 
   function setOrder(name) {
@@ -649,36 +610,80 @@
     draw();
   }
 
-  function setPicker(open) {
+  function setPicker(open, focus) {
     if (!picker || !openBtn) return;
+    if (isRail()) open = true;            // nothing to close in the margin
+
     picker.hidden = !open;
     openBtn.setAttribute('aria-expanded', String(open));
-    if (open) {
-      renderValues();
-      if (searchIn) searchIn.focus();
-    }
+    if (!open) return;
+
+    renderValues();
+    /* Only when they asked for it. Stealing focus on a resize, or on load
+       in the rail, would drag the page to the picker unbidden. */
+    if (focus && searchIn) searchIn.focus();
   }
 
   /* ---------- wiring ---------- */
-
-  viewBar.addEventListener('click', function (e) {
-    var btn = e.target.closest('button[data-view]');
-    if (btn) setView(btn.getAttribute('data-view'));
-  });
 
   if (orderBtn) {
     orderBtn.addEventListener('click', function () {
       var next = state.order === 'newest' ? 'oldest' : 'newest';
       setOrder(next);
-      track('filter-order', ev({ order: next, view: state.view }));
+      track('filter-order', ev({ order: next }));
     });
   }
 
   if (openBtn) {
     openBtn.addEventListener('click', function () {
       var open = picker.hidden;
-      setPicker(open);
-      if (open) track('filter-picker-open', ev({ view: state.view }));
+      setPicker(open, true);
+      if (open) track('filter-picker-open', ev({ tags: state.picked.length }));
+    });
+  }
+
+  /* The scroll region drives its own indicator. rAF-throttled: a wheel
+     gesture fires scroll events far faster than anything needs redrawing. */
+  if (scroller) {
+    var moreTicking = false;
+    valueBar.addEventListener('scroll', function () {
+      if (moreTicking) return;
+      moreTicking = true;
+      window.requestAnimationFrame(function () {
+        moreTicking = false;
+        updateMore();
+      });
+    }, { passive: true });
+
+    /* Pills rewrap at a different width, so what is below the fold changes
+       even though nothing scrolled. */
+    var resizeTimer = null;
+    window.addEventListener('resize', function () {
+      if (picker && picker.hidden) return;
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(updateMore, 150);
+    });
+  }
+
+  if (moreBtn) {
+    moreBtn.addEventListener('click', function () {
+      var down = moreBtn.dataset.dir !== 'up';
+      /* A little less than a full height, so a row stays on screen as an
+         anchor rather than paging blind. */
+      scrollValues(down ? valueBar.scrollTop + valueBar.clientHeight - 28 : 0);
+      track('filter-tag-scroll', ev({ dir: down ? 'down' : 'top' }));
+    });
+  }
+
+  if (doneBtn) {
+    doneBtn.addEventListener('click', function () {
+      setPicker(false);
+      openBtn.focus();
+      /* Land on the results rather than wherever the picker happened to
+         leave them. */
+      if (bar.getBoundingClientRect().top < 0) {
+        bar.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
+      }
     });
   }
 
@@ -708,45 +713,60 @@
     searchIn.addEventListener('keydown', function (e) {
       if (e.key !== 'Enter') return;
       e.preventDefault();
-      var first = valueBar.querySelector('button');
+      var first = valueBar.querySelector('.tag-pills button');
       if (first) first.click();
     });
   }
 
   /* Escape closes the picker, from anywhere inside the bar. */
   bar.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape' && picker && !picker.hidden) {
+    if (e.key === 'Escape' && picker && !picker.hidden && !isRail()) {
       setPicker(false);
       openBtn.focus();
     }
   });
 
-  /* The jump list points at the category headings. From the tag or flat
-     view, switch back first so there is something to jump to. */
+  /* The Overview links point at category headings. A filter can hide the
+     category someone is aiming at, so drop the filter rather than let the
+     link do nothing. */
   Array.prototype.forEach.call(
     document.querySelectorAll('.category-jump a'),
     function (a) {
       a.addEventListener('click', function (e) {
+        var id = a.getAttribute('href').slice(1);
         track('overview-jump', ev({ category: a.textContent.trim() }));
 
-        if (state.view === 'category') return;   // native anchor is fine
-        e.preventDefault();
-        setView('category');
+        if (document.getElementById(id)) return;   // native anchor is fine
 
-        var target = document.getElementById(a.getAttribute('href').slice(1));
+        e.preventDefault();
+        state.picked = [];
+        refresh();
+        var target = document.getElementById(id);
         if (target) {
           target.scrollIntoView({
             behavior: reduceMotion ? 'auto' : 'smooth',
             block: 'start'
           });
         }
-        if (history.replaceState) {
-          history.replaceState(null, '', a.getAttribute('href'));
-        }
       });
     }
   );
 
+  /* Crossing the breakpoint changes what the picker is: a panel you open,
+     or a column that is simply there. Re-measure, because the pills rewrap
+     into a completely different width. */
+  if (railMQ) {
+    var onRail = function () {
+      setPicker(isRail());
+      updateMore();
+    };
+    if (railMQ.addEventListener) railMQ.addEventListener('change', onRail);
+    else if (railMQ.addListener) railMQ.addListener(onRail);
+  }
+
   renderCount();
   bar.hidden = false;
+
+  /* In the rail the picker is open from the start, with nothing to click. */
+  if (isRail()) setPicker(true);
 })();

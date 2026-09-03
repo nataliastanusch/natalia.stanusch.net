@@ -210,16 +210,23 @@ body.page .topbar {
   transition: transform 260ms ease, box-shadow 200ms ease;
 }
 
-/* Retracted while you are heading down the page. */
-body.page .topbar.is-hidden { transform: translateY(-100%); }
+/* Retracted while you are heading down the page. `pointer-events` because
+   a retracted bar must not still be catching clicks meant for whatever is
+   now under it. */
+body.page .topbar.is-hidden {
+  transform: translateY(-100%);
+  pointer-events: none;
+}
 
 /* Once the page has moved at all, a hairline stops the bar bleeding into
    the text sliding underneath it. A shadow rather than a border, so the
    header's height never changes and the content below never jumps. */
 body.page .topbar.is-stuck { box-shadow: 0 1px 0 var(--rule); }
 
-/* An anchored heading has to clear the bar when the bar is showing. */
-body.page .category { scroll-margin-top: 5.5rem; }
+/* Anything we scroll to has to clear the bar when the bar is showing, or
+   it lands underneath it and cannot be read - or clicked. */
+body.page .category,
+body.page .filters { scroll-margin-top: 5.5rem; }
 
 /* ---------- Theme toggle ---------- */
 
@@ -595,14 +602,7 @@ body.home main {
   color: var(--muted);
 }
 
-.filter-views {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem 0.5rem;
-}
-
 /* Shared shape for every control in the bar. */
-.filter-views button,
 .filter-order,
 .filter-open {
   font: inherit;
@@ -616,8 +616,6 @@ body.home main {
   transition: color 120ms ease, border-color 120ms ease;
 }
 
-.filter-views button:hover,
-.filter-views button:focus-visible,
 .filter-order:hover,
 .filter-order:focus-visible,
 .filter-open:hover,
@@ -626,16 +624,10 @@ body.home main {
   border-color: var(--accent-display);
 }
 
-/* Selected: outline and text in the accent, never a fill */
-.filter-views button[aria-pressed="true"] {
-  color: var(--accent-display);
-  border-color: var(--accent-display);
-}
-
 /* ---------- Order ---------- */
 
-/* Pushed to the end of its row, away from the view buttons: it answers a
-   different question and shouldn't read as a fourth view. */
+/* Pushed to the far end of the row: it answers a different question from
+   the tag picker and shouldn't read as part of it. */
 .filter-order {
   margin-left: auto;
   display: inline-flex;
@@ -702,7 +694,20 @@ body.home main {
 
 .tag-picker[hidden] { display: none; }
 
-.filter-search { margin-bottom: 0.4rem; }
+/* Behind the "Tags" button this would only repeat the button, so it is
+   read out but not drawn. The rail below turns it back on. */
+.tag-picker-title {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
+.filter-search { margin-bottom: 0.6rem; }
 
 .filter-search input {
   font: inherit;
@@ -724,14 +729,137 @@ body.home main {
   border-color: var(--accent-display);
 }
 
+/* ---------- The picker's footer ---------- */
+
+.picker-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.8rem;
+  padding-top: 0.7rem;
+  border-top: 1px solid var(--rule);
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.picker-mode {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.picker-mode[hidden] { display: none; }
+
+.picker-done {
+  margin-left: auto;
+  font: inherit;
+  font-size: 0.8rem;
+  color: var(--muted);
+  background: none;
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  padding: 0.15rem 0.7rem;
+  cursor: pointer;
+  transition: color 120ms ease, border-color 120ms ease;
+}
+
+.picker-done:hover,
+.picker-done:focus-visible {
+  color: var(--accent-display);
+  border-color: var(--accent-display);
+}
+
 /* ---------- Tag pills ---------- */
 
+/* Scrolls inside itself rather than growing the page. Left to grow, an
+   open picker ran several screens tall, and filtering then collapsed the
+   document under a reader who had scrolled down into it - which is what
+   made picking a tag feel like the page had broken. */
+/* The wrapper is what the fades and the button are pinned to: they must
+   not scroll with the pills, so they cannot live on the scrollport. */
+.tag-scroller { position: relative; }
+
 .filter-values {
+  position: relative;          /* pills measure their offset against this */
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 0.4rem 0.6rem;
+  max-height: 44vh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--rule) transparent;
+  /* Room for the button to rest over, so the last row is never sat on. */
+  padding-bottom: 2rem;
 }
+
+.filter-values::-webkit-scrollbar { width: 8px; }
+.filter-values::-webkit-scrollbar-thumb {
+  background: var(--rule);
+  border-radius: 999px;
+}
+
+/* Softens whichever edge has more behind it. Both are painted over the
+   pills, so neither can be clicked through. */
+.tag-scroller::before,
+.tag-scroller::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1.4rem;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 150ms ease;
+}
+
+.tag-scroller::before {
+  top: 0;
+  background: linear-gradient(var(--paper), transparent);
+}
+
+.tag-scroller::after {
+  bottom: 0;
+  background: linear-gradient(transparent, var(--paper));
+}
+
+.tag-scroller.is-scrollable:not(.is-top)::before { opacity: 1; }
+.tag-scroller.is-scrollable:not(.is-end)::after  { opacity: 1; }
+
+/* Says how many tags are still below, and pages down to them. Turns into
+   the way back once you reach the end. */
+.tag-more {
+  position: absolute;
+  right: 0.4rem;
+  bottom: 0.4rem;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.12rem 0.5rem;
+  font: inherit;
+  font-size: 0.72rem;
+  line-height: 1.5;
+  color: var(--muted);
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: color 120ms ease, border-color 120ms ease;
+}
+
+.tag-more[hidden] { display: none; }
+
+.tag-more:hover,
+.tag-more:focus-visible {
+  color: var(--accent-display);
+  border-color: var(--accent-display);
+}
+
+.tag-more-caret { font-size: 0.85rem; line-height: 1; }
 
 /* Stacked rather than one wrapping run, so each heading owns the pills
    beneath it. Set from data/tag_groups.yaml; see filters.js. */
@@ -779,17 +907,32 @@ body.home main {
   gap: 0.4rem 0.6rem;
 }
 
-.filter-values .tag-pills--all { margin-bottom: 0.35rem; }
-
 .tag-group + .tag-group { margin-top: 1rem; }
 
+/* Sticky against the scrollport, so you always know which group you are
+   looking at however far down you have scrolled. */
 .tag-group-title {
+  position: sticky;
+  top: 0;
+  z-index: 1;
   margin: 0 0 0.4rem;
+  padding: 0.15rem 0 0.25rem;
+  background: var(--paper);
   font-size: 0.8rem;
   font-weight: 500;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--muted);
+}
+
+/* How many tags the group holds - the count you would otherwise only
+   learn by expanding it. */
+.tag-group-count {
+  margin-left: 0.4rem;
+  font-size: 0.72rem;
+  letter-spacing: 0;
+  opacity: 0.7;
+  font-variant-numeric: tabular-nums;
 }
 
 /* Supported but currently unused - see the note in data/tag_groups.yaml.
@@ -806,42 +949,6 @@ body.home main {
   font-size: 0.78rem;
   font-style: italic;
   color: var(--muted);
-}
-
-/* Only reached when data/tag_groups.yaml is missing: one flat run, clipped
-   to three rows. Rows are 26px tall on a 6px gap, so three end at 90px and
-   the fourth starts at 96px - 5.7rem clips between the two and never
-   leaves a half-cut row showing. */
-.filter-values.is-collapsed {
-  max-height: 5.7rem;
-  overflow: hidden;
-}
-
-/* Beats `.filter-values button` on specificity, so the toggle keeps
-   reading as a link rather than picking up the pill outline. */
-.filter-toggle,
-.filter-values .filter-toggle {
-  display: inline-block;
-  margin-top: 0.45rem;
-  padding: 0;
-  font: inherit;
-  font-size: 0.78rem;
-  color: var(--muted);
-  background: none;
-  border: none;
-  cursor: pointer;
-  text-decoration: underline;
-  text-underline-offset: 0.18em;
-  transition: color 120ms ease;
-}
-
-.filter-toggle:hover,
-.filter-toggle:focus-visible,
-.filter-values .filter-toggle:hover,
-.filter-values .filter-toggle:focus-visible {
-  color: var(--accent-display);
-  background: none;
-  border: none;
 }
 
 .filter-empty { color: var(--muted); }
@@ -865,6 +972,95 @@ body.home main {
 .filter-empty-action:hover,
 .filter-empty-action:focus-visible { color: var(--accent-display); }
 
+/* ---------- The picker as a column of its own ---------- */
+
+/* Above this width the margin beside the text column is wide enough to
+   hold the picker, so it stops being a panel you open and becomes a column
+   that is simply there: filter, selection and results all on screen at
+   once, which is the whole point of filtering by tag.
+
+   Floated rather than positioned, and contained by .prose rather than by
+   .filters. A float is contained by the nearest block formatting context,
+   so `flow-root` on .prose - and deliberately not on .filters - lets the
+   rail escape the filter bar and make the whole column grow to fit it.
+   Absolute positioning would have let a rail taller than the results
+   spill through the footer.
+
+   The negative margin puts it entirely in the white space, so no line box
+   in the text column is shortened and the column does not move a pixel
+   from where it sits at every other width. Same trick as the About
+   portrait, mirrored. Keep 78rem in step with filters.js. */
+@media (min-width: 78rem) {
+
+  .prose { display: flow-root; }
+
+  .tag-picker,
+  .tag-picker[hidden] {
+    display: flex;
+    flex-direction: column;
+    float: left;
+    width: 16rem;
+    margin: 0 0 0 -19rem;   /* 16rem column + 3rem gutter */
+    padding: 0;
+    border: none;
+    border-radius: 0;
+  }
+
+  /* Nothing to open and nothing to dismiss. */
+  .filter-open,
+  .filter-row .filter-label,
+  .picker-done { display: none; }
+
+  /* Left alone in its row, the order button would be shoved to the right
+     edge by the `margin-left: auto` that separates it from the picker
+     button at narrower widths. Bring it back to the column's edge. */
+  .filter-order { margin-left: 0; }
+
+  .tag-picker-title {
+    position: static;
+    order: 0;
+    width: auto;
+    height: auto;
+    margin: 0 0 0.6rem;
+    clip: auto;
+    font-size: 0.8rem;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .filter-search { order: 1; }
+
+  /* With two or more tags picked this holds the any/all switch. Kept near
+     the top: at the foot it would sit a couple of thousand pixels below
+     the thing it governs. */
+  .picker-foot {
+    order: 2;
+    justify-content: flex-start;
+    margin: 0.6rem 0 0;
+    padding: 0;
+    border: none;
+    min-height: 0;
+  }
+
+  .tag-scroller { order: 3; }
+
+  /* The page scrolls; the picker does not need to scroll inside itself.
+     updateMore() measures this and takes the fades and the "n more"
+     button away on its own. */
+  .filter-values {
+    max-height: none;
+    overflow: visible;
+    padding-bottom: 0;
+    margin-top: 0.9rem;
+  }
+
+  /* Sticky needs a scrollport to stick to, and without one it would pin
+     to the viewport and fight the retracting header. */
+  .tag-group-title { position: static; }
+}
+
 /* ---------- The current tag selection ---------- */
 
 /* Sits beside the picker button: what's picked, how the picks combine, and
@@ -874,6 +1070,7 @@ body.home main {
   flex-wrap: wrap;
   align-items: center;
   gap: 0.35rem 0.45rem;
+  margin-top: 0.7rem;
   font-size: 0.8rem;
   color: var(--muted);
 }
@@ -893,7 +1090,7 @@ body.home main {
   overflow: hidden;
 }
 
-.filter-selection .selection-mode button {
+.picker-mode .selection-mode button {
   font: inherit;
   font-size: 0.78rem;
   color: var(--muted);
@@ -904,16 +1101,16 @@ body.home main {
   transition: color 120ms ease, background-color 120ms ease;
 }
 
-.filter-selection .selection-mode button + button {
+.picker-mode .selection-mode button + button {
   border-left: 1px solid var(--rule);
 }
 
-.filter-selection .selection-mode button:hover,
-.filter-selection .selection-mode button:focus-visible {
+.picker-mode .selection-mode button:hover,
+.picker-mode .selection-mode button:focus-visible {
   color: var(--accent-display);
 }
 
-.filter-selection .selection-mode button[aria-pressed="true"] {
+.picker-mode .selection-mode button[aria-pressed="true"] {
   color: var(--paper);
   background: var(--accent-display);
 }
@@ -955,21 +1152,6 @@ body.home main {
 
 .filter-selection .selection-clear:hover,
 .filter-selection .selection-clear:focus-visible { color: var(--accent-display); }
-
-/* Names the group a run of tag headings belongs to, in the entry list
-   under the "By tag" view. */
-.tag-run {
-  margin: 2.5rem 0 0;
-  font-size: 0.78rem;
-  font-weight: 500;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--muted);
-  padding-bottom: 0.3rem;
-  border-bottom: 1px solid var(--rule);
-}
-
-.tag-run + .category { margin-top: 1.1rem; }
 
 /* ---------- About page: text left, portrait right ---------- */
 
