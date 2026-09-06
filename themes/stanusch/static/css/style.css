@@ -23,7 +23,7 @@
   /* Outer width of the centred column. Derived, so it always equals the
      text measure plus the page padding - narrow --measure and the whole
      column narrows with it, staying centred. */
-  --shell:     calc(var(--measure) + 2 * var(--page-x));
+  --shell:     calc(var(--measure) + 3 * var(--page-x));
 
   /* Measure - how wide the text column runs inside that column. */
   --measure:   32rem;
@@ -149,15 +149,31 @@ body > header {
 
 /* ---------- Top bar ---------- */
 
+/* Two children, never wrapping: the name-and-nav block, and the toggle.
+   All the reflowing happens inside .topbar-main, so the toggle is never
+   what gets pushed onto a new line - it stays in the bar, hard against
+   the right edge, at every width. */
 .topbar {
   display: flex;
+  flex-wrap: nowrap;
   align-items: baseline;
-  flex-wrap: wrap;
   column-gap: 1.1rem;
-  row-gap: 0.35rem;
   padding-block: 1.6rem 2.2rem;
   /* The accent panel is positioned against this. */
   position: relative;
+}
+
+/* Name beside nav while there is room for both, name above nav when there
+   isn't. `min-width: 0` so this block is allowed to shrink rather than
+   shoving the toggle off the end. */
+.topbar-main {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 1.1rem;
+  row-gap: 0.35rem;
 }
 
 .site-name {
@@ -243,7 +259,9 @@ body.page .filters { scroll-margin-top: 5.5rem; }
   color: var(--ink);
   cursor: pointer;
   transition: color 120ms ease;
-  align-self: center;
+  /* Sits on the site name's line, not in the middle of the bar, so it
+     holds still when the nav drops onto a second row underneath. */
+  align-self: baseline;
 }
 
 .theme-toggle:hover,
@@ -256,11 +274,25 @@ body.page .filters { scroll-margin-top: 5.5rem; }
 
 .theme-toggle svg { width: 19px; height: 19px; }
 
-/* Which icon shows is driven by data-mode, set in JS, so there is one
-   source of truth for "are we dark right now". */
-.theme-toggle .icon-sun  { display: none; }
-.theme-toggle[data-mode="dark"] .icon-sun  { display: block; }
-.theme-toggle[data-mode="dark"] .icon-moon { display: none; }
+/* Three settings, three icons. The icon names the *setting* - auto, light,
+   dark - and not the colours currently on screen, so every press visibly
+   changes the button even when it doesn't change the page: choosing light
+   while the system is already light has to look like it did something.
+
+   Keyed off <html data-theme-pref>, which the inline script in <head> sets
+   before the first paint. Keying off the button instead would mean shipping
+   one icon in the markup and swapping it once theme.js runs, which is a
+   visible flicker on every load for anyone not on the default.
+
+   Auto doubles as the no-JS fallback: nothing sets the attribute then. */
+.theme-toggle .icon-sun,
+.theme-toggle .icon-moon,
+:root[data-theme-pref="light"] .theme-toggle .icon-auto,
+:root[data-theme-pref="dark"]  .theme-toggle .icon-auto { display: none; }
+
+.theme-toggle .icon-auto,
+:root[data-theme-pref="light"] .theme-toggle .icon-sun,
+:root[data-theme-pref="dark"]  .theme-toggle .icon-moon { display: block; }
 
 /* ---------- Accent picker (five clicks on the header) ---------- */
 
@@ -1467,13 +1499,15 @@ a:focus-visible {
 
   body { font-size: 1.0625rem; }
 
-  /* Name + nav + toggle have to fit the width of the text column, which is
-     narrower than it used to be. These sizes leave roughly 15px of slack on
-     one row; the flex rules above keep it tidy even if that runs out. */
-  .topbar {
-    column-gap: 1.5rem;
-    padding-block: 2.25rem 3rem;
-  }
+  /* The gap belongs to both boxes now: .topbar sets the space between the
+     name-and-nav block and the toggle, .topbar-main the space between the
+     name and the nav. Name and nav share a row here and drop to two rows
+     when the column gets too narrow for both; the toggle is out of that
+     argument either way. */
+  .topbar,
+  .topbar-main { column-gap: 1.5rem; }
+
+  .topbar { padding-block: 2.25rem 3rem; }
 
   .site-name { font-size: 1.3rem; }
 

@@ -156,6 +156,13 @@
     setTheme: function (theme) {
       if (theme) root.setAttribute('data-theme', theme);
       else root.removeAttribute('data-theme');
+
+      /* Which of the three was *chosen*, as opposed to which colours are
+         on screen: 'auto' and 'dark' look identical on a dark system, and
+         the toggle has to be able to tell them apart. Set here rather than
+         in theme.js so the button's icon is correct on the first paint. */
+      root.setAttribute('data-theme-pref', theme || 'auto');
+
       T.paint();
       if (window.initParticles) window.initParticles();
     },
@@ -172,6 +179,7 @@
   /* Apply whatever was saved, before the first paint. */
   var saved = T.savedTheme();
   if (saved) root.setAttribute('data-theme', saved);
+  root.setAttribute('data-theme-pref', saved || 'auto');
   T.paint();
 })();
 </script>

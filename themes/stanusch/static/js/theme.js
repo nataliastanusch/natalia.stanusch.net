@@ -12,38 +12,76 @@
     if (window.siteTrack) window.siteTrack(name, data);
   }
 
-  /* ---------- Theme toggle ---------- */
+  /* ---------- Theme toggle ----------
+
+     Three settings, cycled in a fixed order: auto -> light -> dark -> auto.
+     Auto means no stored preference, so the page follows the system and
+     keeps following it if the system changes later.
+
+     The icon names the setting rather than the colours on screen. Those
+     two come apart in auto - auto on a dark system and dark are the same
+     picture - and if the button showed the picture, the press between
+     them would look like it had done nothing at all. */
+
+  var darkQuery = window.matchMedia
+    ? window.matchMedia('(prefers-color-scheme: dark)')
+    : null;
+
+  function systemTheme() {
+    return darkQuery && darkQuery.matches ? 'dark' : 'light';
+  }
+
+  /* null = auto. An unrecognised stored value gives indexOf -1, so the
+     next press lands on auto, which is the right place to recover to. */
+  var ORDER = [null, 'light', 'dark'];
+
+  function nextTheme() {
+    return ORDER[(ORDER.indexOf(T.savedTheme()) + 1) % ORDER.length];
+  }
 
   function syncToggle() {
     if (!toggle) return;
-    var dark = T.isDark();
-    toggle.dataset.mode = dark ? 'dark' : 'light';
-    toggle.setAttribute('aria-pressed', dark ? 'true' : 'false');
-    toggle.setAttribute('aria-label',
-      dark ? 'Switch to light theme' : 'Switch to dark theme');
+    var pref = T.savedTheme() || 'auto';
+    var next = nextTheme() || 'auto';
+
+    /* The icon is chosen in CSS from <html data-theme-pref>, set before
+       the first paint. This mirror is here for anything scripting the
+       button itself. */
+    toggle.dataset.pref = pref;
+
+    /* Not aria-pressed: that describes two states, and there are three. */
+    toggle.removeAttribute('aria-pressed');
+
+    var label = 'Theme: ' + (pref === 'auto'
+      ? 'auto, following the system (' + systemTheme() + ')'
+      : pref) + '. Switch to ' + (next === 'auto' ? 'auto' : next) + '.';
+
+    toggle.setAttribute('aria-label', label);
+    /* Also on hover - three states behind one icon is a lot to infer. */
+    toggle.setAttribute('title', label);
   }
 
   if (toggle) {
     toggle.addEventListener('click', function () {
-      var next = T.isDark() ? 'light' : 'dark';
+      var next = nextTheme();          // null = auto
       T.write('theme', next);          // only written once they interact
       T.setTheme(next);
       syncToggle();
-      track('theme-toggle', { to: next });
+      track('theme-toggle', { to: next || 'auto' });
     });
     syncToggle();
   }
 
-  /* Follow the system while they haven't chosen for themselves. */
-  if (window.matchMedia) {
-    var mq = window.matchMedia('(prefers-color-scheme: dark)');
+  /* Follow the system while they haven't chosen for themselves. The button
+     is resynced either way: its label names the system's colour, so it can
+     go stale even when the page itself doesn't move. */
+  if (darkQuery) {
     var onSystemChange = function () {
-      if (T.savedTheme()) return;      // they've chosen; leave them alone
-      T.setTheme(null);
+      if (!T.savedTheme()) T.setTheme(null);   // still following: re-apply
       syncToggle();
     };
-    if (mq.addEventListener) mq.addEventListener('change', onSystemChange);
-    else if (mq.addListener) mq.addListener(onSystemChange);
+    if (darkQuery.addEventListener) darkQuery.addEventListener('change', onSystemChange);
+    else if (darkQuery.addListener) darkQuery.addListener(onSystemChange);
   }
 
   /* ---------- Accent picker ---------- */
