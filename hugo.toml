@@ -25,7 +25,7 @@ titleCaseStyle = "none"
     url    = "/publications/"
     weight = 1
   [[menu.main]]
-    name   = "projects"
+    name   = "projects & talks"
     url    = "/projects/"
     weight = 2
   [[menu.main]]

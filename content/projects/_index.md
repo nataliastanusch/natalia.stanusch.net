@@ -1,8 +1,8 @@
 ---
-title: "Projects"
+title: "Projects & talks"
 
 category_order:
+  - "Invited Talks"
   - "Workshops"
   - "Projects"
-  - "Invited Talks"
 ---
