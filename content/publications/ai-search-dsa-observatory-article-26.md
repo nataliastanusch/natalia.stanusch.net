@@ -1,5 +1,5 @@
 ---
-date: 2025-09-16
+date: 2026-09-16
 category: "Professional Publications"
 tags: ["chatbots", "policy", "content moderation", "AI", "AIA", "DSA", "EU", "search engine", "AI search"]
 ---
