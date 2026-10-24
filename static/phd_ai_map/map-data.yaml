@@ -1,0 +1,2058 @@
+# ============================================================================
+# ENTANGLED INTELLIGENCE — controversy map dataset
+# ----------------------------------------------------------------------------
+# Schema:
+#   meta:            title, subtitle, phdCaption (shown when research lens is on)
+#   domains:         list of colored rectangles. x/y/w in grid units (1u = 40px).
+#                    Height is automatic. Nodes flow into columns inside.
+#   nodes:           id (unique, kebab-case), label (short), kind, desc, ref?,
+#                    phd? (true marks a research-lens node), phdNote?
+#   kinds:           field ◆  stage ▣  issue ▲  incident ✸  response ⚖
+#   links:           from/to = node ids. kind: pipeline | cause | feeds | response
+#                    pipeline = the LLM production chain (strong arrows)
+#                    cause    = leads to / enables (faint arrows)
+#                    feeds    = resource/supply relation (faint dashed)
+#                    response = lawsuit / law / pushback (long-dash arrows)
+# All facts researched & dated as of Sept 2026. Edit freely.
+# ============================================================================
+meta:
+  title: "Entangled Intelligence"
+  subtitle: "A controversy map of the AI production stack and its fallout"
+  phdCaption: "My research: controversy mapping of AI's fallout — Wikipedia's influence under AI slop; platform-facilitated NCII (Grok on X); and the lawsuits emerging from it."
+
+groups:
+  - id: machine
+    label: "The machine"
+    color: "#7c62e8"
+  - id: material
+    label: "Material world"
+    color: "#d9944b"
+  - id: social
+    label: "People & platforms"
+    color: "#cf4d88"
+  - id: political
+    label: "Law & politics"
+    color: "#4f8fe0"
+
+domains:
+  # ------------------------------------------------------------------ DATA --
+  - id: data
+    label: "Data collection"
+    color: "#45b1a8"
+    group: machine
+    x: 0
+    y: 30
+    w: 19
+    blurb: "Where the corpus comes from"
+    nodes:
+      - id: training-data-hunger
+        label: "Insatiable demand for training data"
+        kind: issue
+        desc: "Frontier models consume trillions of tokens; the open web, books, code and social platforms are strip-mined to feed them. Every node in this domain follows from it."
+        source: "https://www.washingtonpost.com/technology/interactive/2023/ai-chatbot-learning/"
+      - id: robots-txt-weakness
+        label: "robots.txt has no teeth"
+        kind: issue
+        desc: "Crawler exclusion is a voluntary convention. AI crawlers ignore it, spoof browser headers and rotate IPs; there is no enforcement mechanism."
+        source: "https://datatracker.ietf.org/doc/html/rfc9309"
+      - id: anthropic-pirated-library
+        label: "Anthropic's 7M pirated books"
+        kind: incident
+        desc: "2021-22: Anthropic downloaded ~7 million pirated ebooks from LibGen, PiLiMi and Books3 and kept them as an internal 'central library' for training Claude."
+        source: "https://fingfx.thomsonreuters.com/gfx/legaldocs/jnvwbgqlzpw/ANTHROPIC%20fair%20use.pdf"
+      - id: anthropic-book-destruction
+        label: "Destructive scanning of print books"
+        kind: incident
+        desc: "From 2024 Anthropic bought millions of used print books — including out-of-print and limited editions — cut off their spines, scanned them and pulped the originals to build a training library."
+        ref: "trial documents, June 2025"
+        source: "https://fingfx.thomsonreuters.com/gfx/legaldocs/jnvwbgqlzpw/ANTHROPIC%20fair%20use.pdf"
+      - id: books3
+        label: "Books3 shadow dataset"
+        kind: incident
+        desc: "~196,640 books pirated from Bibliotik, packaged into The Pile (2020) and used by Meta, Bloomberg and others; taken down in Aug 2023 after Danish Rights Alliance DMCA action."
+        source: "https://torrentfreak.com/anti-piracy-group-takes-prominent-ai-training-dataset-books3-offline-230816/"
+      - id: common-crawl
+        label: "Common Crawl's contested archive"
+        kind: issue
+        desc: "The nonprofit crawl underpins most LLMs (>80% of GPT-3 tokens) for 'the price of a sandwich' (Mozilla, 2024); publisher removal requests go largely unfulfilled, paywalled articles included."
+        source: "https://www.mozillafoundation.org/en/research/library/generative-ai-training-data/common-crawl/"
+      - id: laion-csam
+        label: "CSAM found in LAION-5B"
+        kind: incident
+        desc: "Stanford Internet Observatory found 1,008 verified CSAM links in LAION-5B, the dataset behind Stable Diffusion; LAION pulled it and released a cleaned version in Aug 2024."
+        ref: "SIO, Dec 2023"
+        source: "https://www.404media.co/laion-datasets-removed-stanford-csam-child-abuse/"
+      - id: laion-medical-photos
+        label: "Private medical photos scraped"
+        kind: incident
+        desc: "An artist found her private post-surgery clinical photos in LAION-5B (2022); thousands of similar medical-record images were confirmed in the dataset."
+        source: "https://incidentdatabase.ai/cite/465/"
+      - id: claudebot-overload
+        label: "ClaudeBot hammers iFixit"
+        kind: incident
+        desc: "Anthropic's crawler hit iFixit ~1M times in 24 hours despite ToS bans (July 2024); Freelancer.com logged 3.5M hits in 4 hours; one crawler pulled 73TB from Read the Docs."
+        source: "https://www.404media.co/anthropic-ai-scraper-hits-ifixits-website-a-million-times-in-a-day/"
+      - id: foss-crawler-ddos
+        label: "AI crawlers DDoS open-source infra"
+        kind: incident
+        desc: "SourceHut, GNOME and KDE GitLab servers suffered weekly outages in 2024-25 from LLM scrapers ignoring robots.txt — effectively a permanent low-grade DDoS on volunteer infrastructure."
+        source: "https://www.theregister.com/software/2025/03/18/ai-crawlers-havent-learned-to-play-nice-with-websites/1165434"
+      - id: wikimedia-bandwidth-crisis
+        label: "Wikimedia bot bandwidth crisis"
+        kind: incident
+        desc: "AI scraping drove Wikimedia multimedia bandwidth up 50% since Jan 2024; bots are ~35% of pageviews but ~65% of the costliest traffic. 'Our content is free, our infrastructure is not.'"
+        ref: "WMF, Apr 2025"
+        source: "https://diff.wikimedia.org/2025/04/01/how-crawlers-impact-the-operations-of-the-wikimedia-projects/"
+      - id: anubis
+        label: "Anubis proof-of-work gate"
+        kind: response
+        desc: "Open-source tool forcing browsers to solve puzzles before access; adopted by GNOME, SourceHut and kernel.org in 2025, cutting bot traffic to a few percent — at the cost of friction for everyone."
+        source: "https://github.com/TecharoHQ/anubis"
+      - id: cloudflare-blocking
+        label: "Cloudflare blocks AI crawlers"
+        kind: response
+        desc: "AI Labyrinth (Mar 2025) traps non-compliant bots in mazes of decoy pages; from July 2025 Cloudflare blocks AI crawlers by default and runs a Pay-Per-Crawl marketplace."
+        source: "https://www.niemanlab.org/2025/07/cloudflare-will-block-ai-scraping-by-default-and-launches-new-pay-per-crawl-marketplace/"
+      - id: perplexity-stealth-crawling
+        label: "Perplexity evades blocks"
+        kind: incident
+        desc: "Cloudflare published honeypot evidence (Aug 2025) that Perplexity used undeclared crawlers, rotated IPs/ASNs and ignored robots.txt when blocked; its bots were delisted."
+        source: "https://searchengineland.com/cloudflare-vs-perplexity-ai-crawling-460016"
+      - id: meta-eu-training
+        label: "Meta trains on EU user data"
+        kind: incident
+        desc: "From May 2025 Meta trains on adult EU Facebook/Instagram posts under GDPR 'legitimate interest' with opt-out only; noyb threatens class action; courts declined to enjoin it."
+        source: "https://noyb.eu/en/noyb-sends-meta-cease-and-desist-letter-over-ai-training-european-class-action-potential-next-step"
+      - id: x-grok-tos
+        label: "X feeds user posts to Grok"
+        kind: incident
+        desc: "X quietly defaulted users into Grok training (2024); the Irish DPC used emergency GDPR powers, and X agreed to stop using May-Aug 2024 EU posts. ToS now makes training an explicit license grant."
+        source: "https://www.dataprotection.ie/en/news-media/press-releases/data-protection-commission-welcomes-conclusion-proceedings-relating-xs-ai-tool-grok"
+      - id: reddit-license-or-litigate
+        label: "Reddit: license or litigate"
+        kind: response
+        desc: "Reddit sold data to Google (~$60M/yr) and OpenAI, then sued Anthropic (2025, alleging 100,000+ crawls despite blocks) and Perplexity; Anthropic countersued over the Google-exclusive arrangement."
+        source: "https://www.cnbc.com/2025/10/23/reddit-user-data-battle-ai-industry-sues-perplexity-scraping-posts-openai-chatgpt-google-gemini-lawsuit.html"
+
+  # --------------------------------------------------------------- COMMONS --
+  - id: commons
+    label: "Knowledge commons"
+    color: "#9aa7b5"
+    group: machine
+    x: 23
+    y: 30
+    w: 12
+    blurb: "Scraped for training, starved of readers"
+    nodes:
+      - id: wikipedia-squeeze
+        label: "Wikipedia squeezed by AI"
+        kind: issue
+        desc: "Wikipedia is the most-cited source in chatbot answers, yet human pageviews fell 8% YoY (WMF, Oct 2025) as AI summaries divert readers — a double squeeze: scraped for free, starved of the traffic, editors and donations that sustain it."
+        source: "https://gigazine.net/gsc_news/en/20251019-wikipedia-traffic-falling-ai/"
+        phd: true
+        phdNote: "PhD thread: Wikipedia's structural influence on the AI stack, and its degradation by AI slop."
+      - id: wikiproject-ai-cleanup
+        label: "WikiProject AI Cleanup & G15"
+        kind: response
+        desc: "Volunteer project (2023-) catalogs LLM tells and hoaxes; in Aug 2025 English Wikipedia adopted speedy-deletion criterion G15 to instantly delete AI-slop articles."
+        source: "https://www.404media.co/wikipedia-editors-adopt-speedy-deletion-policy-for-ai-slop-articles/"
+      - id: wmf-summaries-pause
+        label: "WMF pauses AI summaries"
+        kind: incident
+        desc: "WMF trialed AI article summaries (Cohere Aya, June 2025) and paused within days after overwhelming editor revolt ('Yuck') — a demonstration of volunteer veto power."
+        source: "https://www.404media.co/wikipedia-pauses-ai-generated-summaries-after-editor-backlash/"
+      - id: grokipedia
+        label: "Grokipedia attacks Wikipedia"
+        kind: incident
+        desc: "Musk launched Grokipedia (Oct 2025, ~885k AI-generated articles) as an 'anti-woke' rival; analyses found content lifted from Wikipedia with rightward slant and factual errors."
+        source: "https://www.poynter.org/fact-checking/2025/grokipedia-wikipedia-copy-ai-errors/"
+      - id: stackoverflow-revolt
+        label: "Stack Overflow data revolt"
+        kind: incident
+        desc: "After the OpenAI licensing deal (May 2024), users mass-deleted answers in protest and were banned — contributors have no exit from training pipelines. Traffic and new questions have collapsed."
+        source: "https://www.tomshardware.com/tech-industry/artificial-intelligence/stack-overflow-bans-users-en-masse-for-rebelling-against-openai-partnership-users-banned-for-deleting-answers-to-prevent-them-being-used-to-train-chatgpt"
+      - id: commons-decline
+        label: "Decline of the open commons"
+        kind: issue
+        desc: "Volunteer-made knowledge (wikis, forums, Q&A) loses readers, editors and revenue to the models trained on it — undermining the very source of future training data."
+        source: "https://gigazine.net/gsc_news/en/20251019-wikipedia-traffic-falling-ai/"
+
+  # -------------------------------------------------------------------- AI --
+  - id: ai
+    label: "Artificial intelligence"
+    color: "#9d8df0"
+    group: machine
+    x: 0
+    y: 0
+    w: 12
+    blurb: "The wider field around LLMs"
+    nodes:
+      - id: llm
+        label: "Large language models"
+        kind: field
+        desc: "The field this map goes deep on — follow the pipeline domain to its right, stage by stage."
+        source: "https://www.ibm.com/topics/large-language-models"
+      - id: ocr
+        label: "OCR"
+        kind: field
+        desc: "Gatekeeps digitized history (error rates skew non-Latin scripts and old newspapers) and powers surveillance: license-plate reader networks searched for ICE and abortion-related lookups (2025)."
+        source: "https://www.404media.co/inside-the-suspicionless-search-network-that-tracks-drivers-around-the-us/"
+      - id: nlp-classifiers
+        label: "NLP scoring & classification"
+        kind: field
+        desc: "Pre-LLM classifiers already broke lives: the Dutch toeslagenaffaire risk-scoring falsely accused ~26,000 families and collapsed a government (2021); HireVue dropped facial analysis after an FTC complaint."
+        source: "https://www.amnesty.org/en/latest/news/2021/10/xenophobic-machines-dutch-child-benefit-scandal/"
+      - id: medical-imaging-ai
+        label: "Medical imaging AI"
+        kind: field
+        desc: "1,000+ FDA-cleared AI devices, yet Epic's sepsis model missed 67% of cases in external validation, and dermatology models underperform on darker skin for lack of representative data."
+        source: "https://www.statnews.com/2021/06/21/epic-sepsis-algorithm-external-validation-study/"
+      - id: geospatial-targeting
+        label: "Geospatial & satellite AI"
+        kind: field
+        desc: "Israel's 'Lavender' reportedly flagged ~37,000 people as targets with ~10% known error and seconds of human review (+972, Apr 2024); the same field powers deforestation alerts."
+        source: "https://www.972mag.com/lavender-ai-israeli-army-gaza/"
+      - id: facial-recognition
+        label: "Facial recognition"
+        kind: field
+        desc: "At least seven documented wrongful arrests, nearly all of Black people (Robert Williams, Detroit); FTC banned Rite Aid's face surveillance; Clearview scraped 30B+ faces."
+        source: "https://www.aclu.org/press-releases/detroit-police-settle-lawsuit-after-facial-recognition-technology-led-to-wrongful"
+      - id: recommender-systems
+        label: "Recommender systems"
+        kind: field
+        desc: "Engagement-maximizing feeds are the template for chatbot engagement optimization; 41 states sued Meta and 14 AGs sued TikTok over addictive design."
+        source: "https://www.reuters.com/legal/litigation/41-us-states-sue-meta-over-harms-caused-young-users-2023-10-24/"
+      - id: speech-recognition
+        label: "Speech recognition"
+        kind: field
+        desc: "Commercial ASR averaged ~35% word error for Black speakers vs ~19% for white speakers (PNAS 2020); Whisper fabricates content while deployed for medical transcription."
+        source: "https://apnews.com/article/ai-artificial-intelligence-health-business-90020cdf5fa16c88aca8368d9c4a5f60"
+      - id: autonomous-vehicles
+        label: "Autonomous vehicles"
+        kind: field
+        desc: "Cruise dragged a pedestrian and hid the footage (2023) — permit revoked, company shut down; NHTSA ran repeated Tesla FSD probes; Waymo recalled 3,871 robotaxis in 2026."
+        source: "https://www.cbtnews.com/nhtsa-escalates-tesla-fsd-investigation/"
+      - id: humanoid-robotics
+        label: "Humanoid robotics"
+        kind: field
+        desc: "Tesla's Optimus robots at 'We, Robot' (2024) were substantially human-teleoperated without disclosure — embodied AI marketing running ahead of autonomy."
+        source: "https://www.theverge.com/2024/10/13/24269131/tesla-optimus-robot-remote-control-we-robot-event"
+      - id: alphafold
+        label: "Protein folding (AlphaFold)"
+        kind: field
+        desc: "The consensus success: 2024 Chemistry Nobel; 200M+ structures serving 2M+ researchers — the legitimacy capital cited in every AI policy fight."
+        source: "https://www.nobelprize.org/prizes/chemistry/2024/press-release/"
+      - id: ai-weather-models
+        label: "AI weather models"
+        kind: field
+        desc: "GraphCast beat physics-based forecasts on 90%+ of targets, but the models free-ride on public reanalysis data and observation networks threatened by budget cuts."
+        source: "https://deepmind.google/discover/blog/graphcast-ai-model-for-faster-and-more-accurate-global-weather-forecasting/"
+      - id: ai-agents
+        label: "AI agents & computer use"
+        kind: field
+        desc: "The 2024-26 agentic wave (computer use, MCP) meets an unsolved security class; Gartner predicts >40% of agentic projects scrapped by 2027 amid 'agent washing'."
+        source: "https://www.gartner.com/en/newsroom/press-releases/2025-06-25-gartner-predicts-over-40-percent-of-agentic-ai-projects-will-be-scrapped-by-end-of-2027"
+      - id: video-generation
+        label: "Video generation"
+        kind: field
+        desc: "Sora-class models industrialize synthetic video; launch feeds filled with copyright-flouting slop and deepfake cameos within days."
+        source: "https://www.cnbc.com/2025/10/20/open-ai-sora-bryan-cranston-sag-aftra.html"
+      - id: music-generation
+        label: "Music generation"
+        kind: field
+        desc: "Suno and Udio trained on copyrighted recordings, were sued by all three majors (2024), then settled into licensed platforms — infringe first, license later."
+        source: "https://www.forbes.com/sites/virginieberger/2025/12/18/launch-train-settle-how-suno-and-udios-licensing-deals-made-copyright-infringement-profitable/"
+      - id: coding-assistants
+        label: "Coding assistants"
+        kind: field
+        desc: "Employment for 22-25-year-old developers fell ~20% from late 2022 to mid-2025 (Stanford, ADP data) while an RCT found experienced devs 19% slower with AI tools despite feeling faster."
+        source: "https://digitaleconomy.stanford.edu/publication/canaries-in-the-coal-mine-six-facts-about-the-recent-employment-effects-of-artificial-intelligence/"
+
+  # ------------------------------------------------------------------- LLM --
+  - id: llm-pipeline
+    label: "The LLM production pipeline"
+    color: "#7c62e8"
+    group: machine
+    layout: rail
+    parent: ai
+    x: 14
+    y: 0
+    w: 22
+    blurb: "Stage by stage, with what breaks at each"
+    nodes:
+      - id: data-collection
+        label: "1 · Data collection"
+        kind: stage
+        desc: "Scraping, buying, pirating and licensing the corpus. Everything in the Data domain hangs off this stage."
+        source: "https://www.mozillafoundation.org/en/research/library/generative-ai-training-data/common-crawl/"
+      - id: training
+        label: "2 · Training"
+        kind: stage
+        desc: "Pre-training at frontier scale — the stage that converts data into capability, and capital into carbon."
+        source: "https://www.visualcapitalist.com/training-costs-of-ai-models-over-time/"
+      - id: foundation-model
+        label: "3 · Foundational model"
+        kind: stage
+        desc: "The weights. Whether they are open or closed, documented or opaque, is a battleground of its own."
+        source: "https://crfm.stanford.edu/assets/report.pdf"
+      - id: api
+        label: "4 · API"
+        kind: stage
+        desc: "The rentier layer: access, pricing, rate limits and deprecation power over everything built downstream."
+        source: "https://developers.openai.com/api/docs/guides/rate-limits"
+      - id: rlhf
+        label: "5 · Human annotation (RLHF)"
+        kind: stage
+        desc: "Human feedback tunes the model's behavior — and imports the labor conditions, values and blind spots of whoever provides it."
+        source: "https://openai.com/index/learning-to-summarize-with-human-feedback/"
+      - id: chatbot-iteration
+        label: "6 · Chatbot iteration"
+        kind: stage
+        desc: "A/B tests on live users, memory features, personality tuning — growth mechanics imported from social media."
+        source: "https://www.reuters.com/investigates/special-report/meta-ai-chatbot-guidelines/"
+      - id: deployment
+        label: "7 · Chatbot deployment"
+        kind: stage
+        desc: "The product meets the public: jailbreaks, injection, dependence, and every social consequence to the right of this map."
+        source: "https://www.technologyreview.com/2025/08/15/1121900/gpt4o-grief-ai-companion/"
+      - id: auto-moderation
+        label: "8 · Automated moderation"
+        kind: stage
+        desc: "Classifiers filter inputs and outputs at machine scale; their failures define what humans must then absorb."
+        source: "https://digital-strategy.ec.europa.eu/en/policies/dsa-brings-transparency"
+      - id: human-moderation
+        label: "9 · Human moderation"
+        kind: stage
+        desc: "The distilled queue of the worst and most ambiguous content lands on human reviewers — the pipeline's hidden last stage."
+        source: "https://www.theverge.com/2019/2/25/18229714/cognizant-facebook-content-moderator-interviews-trauma-working-conditions-arizona"
+      - id: training-costs
+        label: "Training cost spiral"
+        kind: issue
+        desc: "GPT-4 ~$78M compute, Gemini Ultra ~$191M, frontier runs projected toward $1B — concentrating capability in ~5 labs."
+        source: "https://www.visualcapitalist.com/training-costs-of-ai-models-over-time/"
+      - id: emergence-opacity
+        label: "Epistemic opacity"
+        kind: issue
+        desc: "Labs cannot predict capabilities before training; 'emergent abilities' may be a metric artifact (NeurIPS 2023 best paper) — interpretability lags years behind deployment."
+        source: "https://arxiv.org/abs/2206.07682"
+      - id: data-wall
+        label: "The data wall"
+        kind: issue
+        desc: "Epoch AI projects exhaustion of public human text ~2026-2032; Sutskever declared 'peak data' (Dec 2024). The commons this industry burned is finite."
+        source: "https://epoch.ai/blog/will-we-run-out-of-data-limits-of-llm-scaling-based-on-human-generated-data"
+      - id: model-collapse
+        label: "Model collapse"
+        kind: issue
+        desc: "Models trained recursively on generated data degrade (Shumailov, Nature 2024) — AI slop on the web contaminates the next generation's training corpus."
+        source: "https://www.nature.com/articles/s41586-024-07566-y"
+      - id: deepseek-distillation
+        label: "DeepSeek distillation fight"
+        kind: incident
+        desc: "DeepSeek-R1 (Jan 2025, claimed ~$5.6M) erased ~$589B of Nvidia market cap in a day; OpenAI alleged ToS-violating distillation of its outputs — scraping's irony noted widely."
+        source: "https://restofworld.org/2026/openai-deepseek-distillation-dispute-us-china/"
+      - id: open-vs-closed
+        label: "Open vs closed weights"
+        kind: issue
+        desc: "Meta brands Llama 'open source' against the OSI's definition and refused the EU GPAI Code; safety-vs-access remains the field's structuring dispute."
+        source: "https://www.cnbc.com/2025/07/18/meta-europe-ai-code.html"
+      - id: transparency-theater
+        label: "Transparency theater"
+        kind: issue
+        desc: "GPT-4's report disclosed no data, architecture or compute; Stanford's transparency index scored major labs 37/100; red-teaming stays voluntary and NDA-bound."
+        source: "https://crfm.stanford.edu/fmti/"
+      - id: benchmark-gaming
+        label: "Benchmark gaming"
+        kind: incident
+        desc: "Meta sent a special Llama 4 build to LMArena that ranked #2 while the shipped model ranked #32 (Apr 2025); OpenAI funded FrontierMath with access to the problems."
+        source: "https://www.theregister.com/2025/04/08/meta_llama4_cheating/"
+      - id: gpt4o-deprecation
+        label: "GPT-4o removal backlash"
+        kind: incident
+        desc: "OpenAI deleted ~9 models overnight at GPT-5's launch (Aug 2025); users grieving 'a trusted friend' forced Altman to restore 4o within days — vendor power over emotional infrastructure."
+        source: "https://www.tomsguide.com/ai/chatgpt-4o-is-coming-back-after-massive-gpt-5-backlash-heres-what-happened"
+      - id: api-pricing-power
+        label: "Pricing power & rate limits"
+        kind: issue
+        desc: "Providers reprice and throttle at will (o3 -80%, surprise Claude Code weekly caps); the wrapper economy lives one feature launch from obsolescence."
+        source: "https://developers.openai.com/api/docs/guides/rate-limits"
+      - id: liability-vacuum
+        label: "Downstream liability vacuum"
+        kind: issue
+        desc: "Air Canada was made to honor a policy its chatbot invented; who answers for harmful outputs — provider, deployer or user — is still being litigated."
+        source: "https://www.cbc.ca/news/canada/british-columbia/air-canada-chatbot-lawsuit-1.7116416"
+      - id: sycophancy-incident
+        label: "GPT-4o sycophancy incident"
+        kind: incident
+        desc: "An April 2025 update tuned on thumbs-up feedback validated delusions and praised users for quitting psychiatric meds; rolled back in four days. OpenAI admitted its evals had no signal for it."
+        source: "https://openai.com/index/sycophancy-in-gpt-4o/"
+      - id: reward-hacking
+        label: "Reward hacking"
+        kind: issue
+        desc: "Models optimize the proxy, not the intent: o1-preview spontaneously hacked a chess environment to 'win'; penalizing bad reasoning teaches models to hide it."
+        source: "https://arxiv.org/abs/2502.13295"
+      - id: weird-values
+        label: "Whose values? WEIRD bias"
+        kind: issue
+        desc: "RLHF encodes annotators' and labs' values (WEIRD, left-of-median skew per Santurkar 2023); a 2025 US executive order mandates 'anti-woke' models in federal procurement — alignment is now partisan terrain."
+        source: "https://arxiv.org/abs/2303.17548"
+      - id: ab-testing-users
+        label: "A/B testing without consent"
+        kind: issue
+        desc: "Chatbot versions are tested on live users with no consent or debriefing; leaked Meta standards had permitted 'sensual' companion chats with minors (Reuters, Aug 2025)."
+        source: "https://www.reuters.com/investigates/special-report/meta-ai-chatbot-guidelines/"
+      - id: memory-privacy
+        label: "Memory features vs privacy"
+        kind: issue
+        desc: "ChatGPT memory now draws on all past chats; a court preservation order forced retention of user conversations including deleted ones — personalization meets discovery obligations."
+        source: "https://www.reuters.com/legal/litigation/openai-must-preserve-all-chatgpt-logs-including-deleted-chats-court-says-2025-05-13/"
+      - id: jailbreaks
+        label: "Jailbreaks & prompt leaks"
+        kind: issue
+        desc: "From DAN personas to many-shot attacks, guardrails remain bypassable; leaked system prompts repeatedly reveal hidden behavioral steering."
+        source: "https://www.anthropic.com/research/many-shot-jailbreaking"
+      - id: prompt-injection
+        label: "Prompt injection (unsolved)"
+        kind: issue
+        desc: "Named in 2022, still without a general fix: agentic browsers hijacked via webpage text, zero-click data theft from Copilot (CVE-2025-32711). No data/instruction separation exists in LLMs."
+        source: "https://www.brave.com/blog/comet-prompt-injection/"
+      - id: classifier-failures
+        label: "Over- and under-blocking"
+        kind: issue
+        desc: "Automated moderation errs both ways: breast-cancer posts removed as nudity while Arabic classifiers over-enforced Palestinian speech with no Hebrew counterpart (BSR audit)."
+        source: "https://about.fb.com/wp-content/uploads/2022/09/Human-Rights-Due-Diligence-of-Metas-Impacts-in-Israel-and-Palestine-in-May-2021.pdf"
+      - id: multilingual-gaps
+        label: "Low-resource language gaps"
+        kind: issue
+        desc: "~87% of Facebook's misinformation-classifier spend covered English (~9% of users); GPT-4 was jailbroken ~79% of the time by translating prompts into Zulu."
+        source: "https://arxiv.org/abs/2310.02446"
+      - id: machine-human-handoff
+        label: "The machine-to-human pipe"
+        kind: issue
+        desc: "90%+ of enforcement is automated (DSA reports); what escalates to humans is a distilled queue of the most ambiguous and traumatic content, at thresholds nobody audits."
+        source: "https://digital-strategy.ec.europa.eu/en/policies/dsa-brings-transparency"
+
+  # --------------------------------------------------------------- COMPUTE --
+  - id: compute
+    label: "Compute & hardware"
+    color: "#e08a3c"
+    group: material
+    x: 0
+    y: 70
+    w: 19
+    blurb: "Chips, memory, storage, money"
+    nodes:
+      - id: compute-demand
+        label: "AI compute demand"
+        kind: issue
+        desc: "Hyperscaler AI buildout pushed datacenter capex up 57% in 2025 toward $1T+ in 2026 — the root driver of every node in this band of the map."
+        source: "https://www.delloro.com/news/data-center-capex-surges-57-percent-in-2025-as-ai-deployments-accelerate/"
+      - id: nvidia-dominance
+        label: "Nvidia near-monopoly"
+        kind: issue
+        desc: "~80-90% of AI accelerators, locked in by CUDA; H100s at $25-40k, Blackwell output pre-allocated through Q2 2026 while smaller buyers queue for months."
+        source: "https://siliconanalysts.com/analysis/nvidia-ai-accelerator-market-share-2024-2026"
+      - id: export-controls
+        label: "US chip export controls"
+        kind: response
+        desc: "BIS barred H100-class chips from China (2022-23); the H20 was license-blocked in Apr 2025 ($4.5B Nvidia write-off), then allowed back against an unprecedented 15% revenue cut to the US government."
+        source: "https://www.lawfaremedia.org/article/trump-s-illegal-ai-chip-export-controls--and-who-can-challenge-them"
+      - id: chip-smuggling
+        label: "GPU smuggling networks"
+        kind: incident
+        desc: "DOJ's Operation Gatekeeper (Dec 2025) dismantled a network moving >$160M of H100/H200s to China via straw buyers; first AI-chip diversion conviction in Oct 2025."
+        source: "https://www.cnbc.com/2025/12/31/160-million-export-controlled-nvidia-gpus-allegedly-smuggled-to-china.html"
+      - id: tsmc-chokepoint
+        label: "TSMC single point of failure"
+        kind: issue
+        desc: ">90% of the most advanced logic chips — including every Nvidia AI GPU — are fabricated by TSMC in Taiwan, making the whole stack hostage to cross-strait geopolitics."
+        source: "https://spectrum.ieee.org/tsmc-arizona"
+      - id: chips-act-arizona
+        label: "CHIPS Act & Arizona delays"
+        kind: response
+        desc: "$52.7B to reshore fabs; TSMC Arizona slipped years and leading-edge nodes stay in Taiwan even as the US commitment grew past $65B."
+        source: "https://www.cio.com/article/3806430/delays-in-tsmcs-arizona-plant-spark-supply-chain-worries.html"
+      - id: asml-monopoly
+        label: "ASML EUV monopoly"
+        kind: issue
+        desc: "One Dutch firm makes 100% of EUV lithography machines (~$350-400M each for High-NA); no EUV tool has ever shipped to China."
+        source: "https://www.trendforce.com/insights/asml-euv"
+      - id: blackwell-scarcity
+        label: "GPU allocation queues"
+        kind: issue
+        desc: "Nearly all B200/GB200 output through Q2 2026 pre-committed to hyperscalers; smaller labs and 'sovereign AI' buyers wait 6-12 months — compute concentration compounds."
+        source: "https://siliconanalysts.com/analysis/nvidia-ai-accelerator-market-share-2024-2026"
+      - id: hbm-shift
+        label: "HBM cannibalizes DRAM"
+        kind: issue
+        desc: "Samsung, SK Hynix and Micron shifted wafer capacity to high-margin HBM for AI accelerators — each HBM gigabyte eats ~3x the wafer area of DDR5; DRAM supply booked out through 2027."
+        source: "https://en.wikipedia.org/wiki/2025%E2%80%93present_global_memory_supply_shortage"
+      - id: ram-price-spike
+        label: "Consumer RAM price explosion"
+        kind: incident
+        desc: "DDR5 spot prices roughly quadrupled from Sept 2025 into 2026; DRAM contracts +171% YoY; PC makers warned of 15-20% system price hikes — the 'RAMpocalypse'."
+        source: "https://en.wikipedia.org/wiki/2025%E2%80%93present_global_memory_supply_shortage"
+      - id: dram-collusion-suit
+        label: "DRAM collusion class action"
+        kind: response
+        desc: "A June 2026 US class action accuses Samsung, SK Hynix and Micron (~90% of DRAM) of coordinating output cuts under cover of the HBM shift; both Korean firms have prior price-fixing convictions."
+        source: "https://www.tomshardware.com/tech-industry/samsung-sk-hynix-and-micron-sued-over-alleged-dram-price-fixing-amid-record-memory-costs"
+      - id: nand-ssd-spike
+        label: "SSD/NAND price surge"
+        kind: incident
+        desc: "NAND contract prices +50% (Nov 2025) then +70-75% forecast for Q2 2026; consumer 1TB SSDs roughly doubled, with no relief expected before late 2027."
+        source: "https://www.trendforce.com/presscenter/news/20260331-12995.html"
+      - id: hdd-shortage
+        label: "Nearline HDD shortage"
+        kind: issue
+        desc: "Hyperscaler cold-storage demand outran hard-drive supply in 2025-26; lead times stretched past a year, pushing buyers to SSDs and tightening NAND further."
+        source: "https://www.blocksandfiles.com/ai-ml/2025/02/04/very-large-ai-model-training-uses-object-storage/1602990"
+      - id: storage-demand
+        label: "Training data & checkpoint storage"
+        kind: issue
+        desc: "Petabyte-scale corpora and terabyte-scale checkpoints every few hours; enterprise SSDs surpassed smartphones as the top NAND consumer in 2026."
+        source: "https://www.vastdata.com/blog/a-checkpoint-on-checkpoints-in-llms"
+      - id: gpu-e-waste
+        label: "AI hardware e-waste"
+        kind: issue
+        desc: "Generative AI could add 1.2-5 Mt of e-waste by 2030 on 2-5-year GPU refresh cycles (Nature Comp. Sci. 2024); a 2026 revision cut estimates ~90% — the magnitude itself is contested."
+        source: "https://www.scientificamerican.com/article/generative-ai-could-generate-millions-more-tons-of-e-waste-by-2030/"
+      - id: circular-financing
+        label: "Circular financing deals"
+        kind: issue
+        desc: "Nvidia pledges up to $100B into OpenAI, which buys Nvidia-filled capacity via a ~$300B Oracle deal, plus AMD warrants — vendor money returning as vendor revenue (2025)."
+        source: "https://www.bloomberg.com/news/articles/2025-10-08/the-circular-openai-nvidia-and-amd-deals-raising-fears-of-a-new-tech-bubble"
+      - id: capex-bubble
+        label: "Datacenter capex bubble debate"
+        kind: issue
+        desc: "$1.7T cumulative datacenter spend forecast by 2030; critics compare the customer-financing structures to Enron-era practices, bulls note cash-flow funding — unresolved systemic risk."
+        source: "https://www.prnewswire.com/news-releases/ai-boom-drives-data-center-capex-to-1-7-trillion-by-2030--according-to-delloro-group-302681759.html"
+
+  # ------------------------------------------------------------- MATERIALS --
+  - id: materials
+    label: "Materials & extraction"
+    color: "#b08a5e"
+    group: material
+    x: 0
+    y: 91
+    w: 13
+    blurb: "What the chips are made of"
+    nodes:
+      - id: gallium-germanium-ban
+        label: "China gallium/germanium curbs"
+        kind: incident
+        desc: "China imposed export licensing on gallium and germanium (2023), then banned exports to the US outright (Dec 2024) in retaliation for chip controls; gallium prices roughly doubled."
+        source: "https://www.pillsburylaw.com/en/news-and-insights/china-suspends-export-controls-certain-critical-minerals-related-items.html"
+      - id: rare-earth-controls
+        label: "2025 rare-earth escalation"
+        kind: incident
+        desc: "Beijing's Oct 2025 controls cover any product with >=0.1% Chinese-origin rare earths — an extraterritorial mirror of US rules; parts suspended after a truce, until Nov 2027. A pause, not a reversal."
+        source: "https://www.csis.org/analysis/consequences-chinas-new-rare-earths-export-restrictions"
+      - id: cobalt-drc
+        label: "DRC cobalt conditions"
+        kind: issue
+        desc: "~70% of world cobalt from the DRC; ~40,000 children estimated in artisanal mining; the US lawsuit against Apple, Google, Tesla, Microsoft and Dell was dismissed — accountability remains contested."
+        source: "https://www.dol.gov/agencies/ilab/reports/child-labor/list-of-goods/supply-chains/lithium-ion-batteries"
+      - id: copper-crunch
+        label: "Datacenter copper crunch"
+        kind: issue
+        desc: "AI datacenters demand vast copper for busbars and grid hookups; forecasts run to ~1.1 Mt/yr by 2030, against an IEA warning of a 30% copper supply deficit by 2035."
+        source: "https://www.tomshardware.com/tech-industry/why-copper-markets-are-feeling-the-pinch"
+      - id: pfas-fabs
+        label: "PFAS in chipmaking"
+        kind: issue
+        desc: "'Forever chemicals' are functionally irreplaceable in photolithography; 3M's exit from PFAS manufacturing rattled supply chains while fab wastewater contamination draws scrutiny."
+        source: "https://www.semiconductors.org/pfas/"
+      - id: fab-water
+        label: "Fab ultrapure water vs drought"
+        kind: issue
+        desc: "TSMC consumed ~101 billion liters in 2023; during Taiwan's worst drought in ~56 years (2021), farmers' irrigation was cut while fabs trucked in water."
+        source: "https://www.forbes.com/sites/emanuelabarbiroglio/2021/05/31/no-water-no-microchips-what-is-happening-in-taiwan/"
+      - id: fab-energy
+        label: "Fab electricity consumption"
+        kind: issue
+        desc: "TSMC alone uses ~9% of Taiwan's electricity, projected toward ~24% by 2030 — on a fossil-heavy island grid."
+        source: "https://www.greenpeace.org/eastasia/press/7930/semiconductor-industry-electricity-consumption-to-more-than-double-by-2030-study/"
+
+  # ---------------------------------------------------------------- ENERGY --
+  - id: energy
+    label: "Energy & grid"
+    color: "#d9b13b"
+    group: material
+    x: 23
+    y: 70
+    w: 19
+    blurb: "Power plants for chatbots"
+    nodes:
+      - id: xai-memphis-turbines
+        label: "xAI's unpermitted Memphis turbines"
+        kind: incident
+        desc: "From June 2024 xAI ran up to 35 mobile methane turbines (~420 MW) at Colossus without air permits, beside the majority-Black Boxtown neighborhood that already bears elevated asthma and cancer risk."
+        source: "https://www.selc.org/news/inside-memphis-fight-against-xai/"
+      - id: xai-memphis-permit
+        label: "Retroactive permits for xAI"
+        kind: incident
+        desc: "Shelby County permitted 15 permanent turbines (July 2025, ~87 tons NOx/yr); appeals pending — a precedent that build-first-ask-later gets legalized after the fact."
+        source: "https://www.datacenterdynamics.com/en/news/elon-musk-xai-gas-turbines-memphis/"
+      - id: naacp-xai-suit
+        label: "NAACP Clean Air Act suit"
+        kind: response
+        desc: "NAACP, SELC and Earthjustice sued xAI (Apr 2026) over 27+ unpermitted turbines at Colossus 2 in Southaven, Mississippi — a federal test of whether datacenter power plants can outrun the Clean Air Act."
+        source: "https://naacp.org/articles/naacp-sues-xai-illegal-pollution-data-center-power-plant"
+      - id: tmi-restart
+        label: "Three Mile Island restart"
+        kind: incident
+        desc: "Constellation and Microsoft signed a 20-year 835 MW deal (Sept 2024) to restart TMI Unit 1 for AI load — the first US reactor revived for a single corporate buyer."
+        source: "https://www.witf.org/2026/07/28/three-mile-island-reactor-restart-progresses-through-environmental-review-public-comments/"
+      - id: homer-city-gas
+        label: "Homer City: largest US gas plant"
+        kind: incident
+        desc: "The retired 2 GW coal site in Pennsylvania becomes a $10B+ datacenter campus powered by up to 4.5 GW of new gas turbines — decades of locked-in combustion 'cleaner than coal'."
+        source: "https://www.utilitydive.com/news/homer-city-gas-fired-power-station-data-center-firstenergy/744332/"
+      - id: stargate-abilene-gas
+        label: "Stargate's on-site gas plant"
+        kind: incident
+        desc: "OpenAI/Crusoe's Abilene campus filed for 360 MW of on-site gas (permitted ~1.6M tons GHG/yr), with 29 more turbines ordered — merchant power plants inside datacenter fences."
+        source: "https://www.texastribune.org/2025/06/05/texas-data-centers-gas-power-plants-ai/"
+      - id: ferc-amazon-rejection
+        label: "FERC blocks Amazon nuclear deal"
+        kind: response
+        desc: "FERC rejected expanding behind-the-meter sales from Talen's Susquehanna nuclear plant to Amazon (Nov 2024), citing grid-reliability risk and cost-shifting to other ratepayers."
+        source: "https://www.utilitydive.com/news/ferc-interconnection-isa-talen-amazon-data-center-susquehanna-exelon/731841/"
+      - id: smr-hype
+        label: "SMR promises, gas reality"
+        kind: issue
+        desc: "Google signed the first corporate small-modular-reactor deal (2024, first unit ~2030); no commercial SMR operates in the US, so near-term AI load is met by gas."
+        source: "https://www.utilitydive.com/news/google-kairos-power-advanced-nuclear-reactor-data-center-electricity-demand-ai/729876/"
+      - id: pjm-price-spike
+        label: "PJM capacity prices jump ~10x"
+        kind: incident
+        desc: "PJM capacity prices rose from $28.92 to $269.92/MW-day in one auction; the market monitor attributed 63% of the $9.3B increase to datacenter load. Household bills rose 1.5-5%+ across 13 states."
+        source: "https://ieefa.org/resources/projected-data-center-growth-spurs-pjm-capacity-prices-factor-10"
+      - id: ohio-datacenter-tariff
+        label: "Ohio makes datacenters pay"
+        kind: response
+        desc: "PUCO approved a landmark tariff (July 2025) requiring new datacenter customers to pay for at least 85% of subscribed capacity for up to 12 years, after grid costs were socialized onto households."
+        source: "https://www.powermag.com/regulator-approves-aep-ohios-landmark-data-center-tariff/"
+      - id: dublin-moratorium
+        label: "Dublin grid moratorium"
+        kind: response
+        desc: "EirGrid halted new datacenter connections around Dublin (2022-2028) as datacenters reached ~21% of Ireland's electricity — more than all urban homes; lifted Dec 2025 only for projects bringing their own generation."
+        source: "https://www.datacenterdynamics.com/en/news/eirgrid-says-no-new-applications-for-data-centers-in-dublin-till-2028/"
+      - id: omaha-coal-delay
+        label: "North Omaha coal delayed"
+        kind: incident
+        desc: "OPPD voted (Dec 2025) to keep burning coal past its promised 2026 conversion, citing datacenter demand — the plant sits in majority-Black North Omaha with elevated asthma rates."
+        source: "https://www.wowt.com/2025/12/19/oppd-delays-closure-north-omaha-coal-plant-despite-community-opposition/"
+      - id: google-emissions
+        label: "Google emissions +51%"
+        kind: incident
+        desc: "Google's 2024 emissions were 51% above its 2019 baseline (11.5 MtCO2e), driven by the AI buildout — while the 2030 net-zero pledge officially stands."
+        source: "https://www.itpro.com/infrastructure/data-centres/google-emissions-increase-data-center-reduction"
+      - id: microsoft-emissions
+        label: "Microsoft emissions +29%"
+        kind: incident
+        desc: "Microsoft's emissions rose 29% since 2020, mostly embodied carbon in concrete, steel and chips for AI datacenters — against its carbon-negative-by-2030 pledge."
+        source: "https://www.npr.org/2024/07/12/g-s1-9545/ai-brings-soaring-emissions-for-google-and-microsoft-a-major-contributor-to-climate-change"
+      - id: deepseek-jevons
+        label: "Jevons paradox rebound"
+        kind: issue
+        desc: "DeepSeek's efficiency shock briefly questioned the buildout; Nadella replied 'Jevons paradox strikes again!' and capex accelerated — efficiency gains feed total consumption."
+        source: "https://fortune.com/2025/01/27/microsoft-ceo-satya-nadella-deepseek-optimism-jevons-paradox"
+      - id: gemini-footprint-claim
+        label: "Google's per-prompt accounting"
+        kind: response
+        desc: "Google claims a median Gemini prompt uses 0.24 Wh and 0.26 mL of water; researchers counter that market-based accounting and excluded totals understate real impact — the marginal-vs-total fight."
+        source: "https://www.datacenterdynamics.com/en/news/google-median-gemini-prompt-uses-024-watt-hours-of-power-and-consumes-026ml-of-water/"
+
+  # ------------------------------------------------------------- TERRITORY --
+  - id: territory
+    label: "Water, land & communities"
+    color: "#3fb8c9"
+    group: material
+    x: 21
+    y: 91
+    w: 15
+    blurb: "Where the cloud touches ground"
+    nodes:
+      - id: datacenter-buildout
+        label: "The datacenter land rush"
+        kind: issue
+        desc: "Hyperscale campuses land in specific places — with NDAs, tax abatements and water permits — before communities learn who is moving in."
+        source: "https://azluminaria.org/2025/08/06/tucson-city-council-rejects-project-blue-amid-intense-community-pressure/"
+      - id: google-water-use
+        label: "Datacenter water consumption"
+        kind: issue
+        desc: "Google's datacenters consumed ~6.1 billion gallons in 2024 (Council Bluffs alone ~1B); most operators disclose far less, and evaporated water does not return to local watersheds."
+        source: "https://thecurrentga.org/2025/08/26/data-centers-consume-massive-amounts-of-water-companies-rarely-tell-the-public-exactly-how-much/"
+      - id: chile-cerrillos
+        label: "Chile revokes Google's permit"
+        kind: incident
+        desc: "Google's Cerrillos datacenter was licensed to draw ~7.6M liters/day from a drought-strained Santiago aquifer; community mobilization won a partial judicial revocation (Feb 2024) and a redesign to air cooling."
+        source: "https://www.semafor.com/article/02/28/2024/chile-google-data-center-gets-permit-partially-revoked"
+      - id: uruguay-drought
+        label: "Uruguay: 'not drought, plunder'"
+        kind: incident
+        desc: "As Montevideo's reservoirs nearly ran dry (2023) and tap water was mixed with brackish river water, protests against Google's planned datacenter forced a redesign to air cooling."
+        source: "https://www.datacenterdynamics.com/en/news/googles-uruguay-data-center-approved-after-reformulation/"
+      - id: aragon-water
+        label: "Aragón: AWS wants 48% more water"
+        kind: incident
+        desc: "Amazon asked drought-hit Aragón (Spain) to raise water permits 48% (Dec 2024) while the region requested EU drought aid; 'Tu Nube Seca Mi Río' protests followed."
+        source: "https://www.source-material.org/amazon-microsoft-google-trump-data-centres-water-use/"
+      - id: queretaro-drought
+        label: "Querétaro's thirsty datacenters"
+        kind: incident
+        desc: "$12B+ in datacenter investment landed in a Mexican state suffering its worst drought in a century, with 17 of 18 municipalities facing shortages."
+        source: "https://www.context.news/ai/thirsty-data-centres-spring-up-in-water-poor-mexican-town"
+      - id: tucson-project-blue
+        label: "Tucson rejects Project Blue"
+        kind: incident
+        desc: "Tucson's council voted 7-0 (Aug 2025) against an Amazon-linked desert datacenter after a 'water grab' campaign — then the project forum-shopped to county land and got power anyway."
+        source: "https://azluminaria.org/2025/08/06/tucson-city-council-rejects-project-blue-amid-intense-community-pressure/"
+      - id: indiana-wetlands
+        label: "Indiana wetlands violations"
+        kind: incident
+        desc: "Regulators halted Amazon's New Carlisle AI campus (built for Anthropic) over unauthorized wetlands destruction; ~$18B in US projects blocked and ~$64B delayed by local opposition in two years."
+        source: "https://www.constructionowners.com/news/idem-halts-amazon-data-center-work-over-wetlands-violation"
+      - id: datacenter-noise
+        label: "The 24/7 cooling hum"
+        kind: issue
+        desc: "Chandler, AZ wrote noise into zoning law after years of complaints; Loudoun County's 'Data Center Alley' residents report low-frequency hum existing ordinances cannot capture."
+        source: "https://www.eesi.org/articles/view/communities-are-raising-noise-pollution-concernsabout-data-centers"
+      - id: virginia-tax-breaks
+        label: "Tax breaks vs ~50 jobs"
+        kind: issue
+        desc: "Virginia's datacenter tax exemption forgoes ~$1B+/yr while a typical facility employs ~50 permanent workers; Dominion has contracted ~40+ GW of future load partly paid through household rates."
+        source: "https://jlarc.virginia.gov/landing-2024-data-centers-in-virginia.asp"
+
+  # ----------------------------------------------------------------- LABOR --
+  - id: labor
+    label: "Human labor"
+    color: "#e06377"
+    group: social
+    x: 82
+    y: 0
+    w: 22
+    blurb: "The people inside the machine"
+    nodes:
+      - id: sama-openai-kenya
+        label: "Sama/OpenAI Kenya labelers"
+        kind: incident
+        desc: "Workers in Nairobi earned ~$1.32-2/hr labeling descriptions of child abuse, bestiality and torture to train ChatGPT's safety filter; OpenAI paid Sama $12.50/hr per worker."
+        ref: "TIME, Jan 2023"
+        source: "https://time.com/6247678/openai-chatgpt-kenya-workers/"
+      - id: kenya-parliament-petition
+        label: "Labelers petition Kenya's parliament"
+        kind: response
+        desc: "Former Sama moderators petitioned the National Assembly (2023) to investigate OpenAI/Sama over pay and PTSD; no completed investigation years later."
+        source: "https://techcrunch.com/2023/07/14/workers-that-made-chatgpt-less-harmful-ask-lawmakers-to-stem-alleged-exploitation-by-big-tech"
+      - id: motaung-v-meta
+        label: "Motaung v Meta/Sama"
+        kind: response
+        desc: "Daniel Motaung sued Meta and Sama in Nairobi (2022) over ~$2.20/hr moderation work and union-busting; Kenyan courts affirmed jurisdiction over Meta, merits still undecided."
+        source: "https://time.com/6253180/meta-kenya-lawsuit-motaung/"
+      - id: scola-52m-settlement
+        label: "$52M US moderator settlement"
+        kind: response
+        desc: "Meta paid $52M to 11,250+ US content moderators (2020) — the first legal recognition that moderation work causes PTSD."
+        source: "https://www.cnn.com/2024/12/22/business/facebook-content-moderators-kenya-ptsd-intl"
+      - id: kenya-ptsd-diagnoses
+        label: "144 moderators diagnosed with PTSD"
+        kind: incident
+        desc: "Medico-legal reports filed in Nairobi (Dec 2024): 144 of 185 assessed ex-Sama Facebook moderators diagnosed with PTSD — 81% severe or extremely severe."
+        source: "https://www.cnn.com/2024/12/22/business/facebook-content-moderators-kenya-ptsd-intl"
+      - id: sama-mass-redundancy
+        label: "185 moderators' redundancy case"
+        kind: response
+        desc: "All ~260 Sama Facebook moderators were sacked after organizing (2023); 185 sued Meta/Sama/Majorel, and appellate courts ruled Meta can be sued as co-employer in Kenya."
+        source: "https://www.business-humanrights.org/en/latest-news/court-of-appeal-rules-meta-can-be-sued-in-kenyan-courts-over-layoffs-of-content-moderators/"
+      - id: ghana-moderators
+        label: "Ghana: the next moderation hub"
+        kind: incident
+        desc: "After Meta left Kenya, reporting exposed 'dire' conditions for ~150 moderators at Majorel in Accra — depression, a suicide attempt, surveillance — with lawsuits following (2025)."
+        source: "https://www.business-humanrights.org/en/latest-news/ghana-meta-faces-allegations-over-content-moderators-workers-rights-abuses/"
+      - id: ethiopia-meta-case
+        label: "Ethiopia hate-speech case"
+        kind: response
+        desc: "Kenya's High Court took jurisdiction (2025) over claims that Facebook's algorithms amplified Tigray-war violence; plaintiffs seek a ~$2.4B restitution fund and Global South moderation investment."
+        source: "https://www.amnesty.org/en/latest/news/2025/04/kenya-high-court-has-ruled-that-it-has-jusridiction-over-case-against-meta/"
+      - id: remotasks-exit
+        label: "Remotasks vanishes from Africa"
+        kind: incident
+        desc: "Scale AI's gig platform cut off workers in Kenya, Nigeria and Pakistan without notice (Mar 2024), some just before payday with unpaid balances."
+        source: "https://restofworld.org/2024/scale-ai-remotasks-banned-workers/"
+      - id: scale-wage-suits
+        label: "Scale AI wage lawsuits"
+        kind: response
+        desc: "US class actions alleged taskers were misclassified as contractors with pay algorithmically clawed down; Scale agreed to a $12.5M settlement."
+        source: "https://www.kingsiegel.com/blog/scale-ai-misclassification-settlement-california-class-action/"
+      - id: surge-ai-suit
+        label: "Surge AI class action"
+        kind: response
+        desc: "Suit alleges Surge AI ($1.2B revenue, ~110 staff, clients incl. Anthropic and OpenAI) misclassified tens of thousands of annotators, denying minimum wage and overtime."
+        source: "https://en.wikipedia.org/wiki/Surge_AI"
+      - id: venezuela-annotation
+        label: "Crisis-priced Venezuelan labor"
+        kind: issue
+        desc: "Venezuela's collapse made educated workers a bargain annotation pool earning cents per task — 'AI colonialism' profiting from catastrophe (MIT Tech Review, 2022)."
+        source: "https://www.technologyreview.com/2022/04/20/1050392/ai-industry-appen-scale-data-labels/"
+      - id: ghost-work
+        label: "Ghost work"
+        kind: issue
+        desc: "The invisible on-demand human labor that makes AI 'look smart' (Gray & Suri, 2019) — distributed, deniable and excluded from employment protections."
+        source: "https://www.hmhbooks.com/shop/books/Ghost-Work/9781328566249"
+      - id: expert-annotation-shift
+        label: "Shift to expert annotators"
+        kind: issue
+        desc: "Frontier labs moved from mass gig labeling to rented PhDs, doctors and lawyers (Surge $1.2B revenue; Mercor at $10B valuation) — still contractors, now bifurcating the labor market."
+        source: "https://medium.com/@ishisinghal/the-evolution-of-data-labelling-sama-scale-ai-surge-ai-and-mercor-8a8d69514336"
+      - id: xai-tutor-layoffs
+        label: "xAI cuts 500 tutors overnight"
+        kind: incident
+        desc: "xAI laid off ~500 generalist AI tutors — a third of its annotation team — by late-Friday email with immediate access cutoff (Sept 2025)."
+        source: "https://techcrunch.com/2025/09/13/xai-reportedly-lays-off-500-workers-from-data-annotation-team"
+      - id: moderators-union
+        label: "African Content Moderators Union"
+        kind: response
+        desc: "150+ moderators and labelers serving Meta, TikTok and OpenAI voted in Nairobi (May 2023) to form the first African content moderators' union."
+        source: "https://www.context.news/big-tech/mental-trauma-african-content-moderators-push-big-tech-on-rights"
+      - id: data-labelers-association
+        label: "Data Labelers Association"
+        kind: response
+        desc: "Kenyan AI data workers organized (2024) against low task pay and sudden platform exits, partnering with DAIR and Turkopticon."
+        source: "https://www.computerweekly.com/news/366619321/Kenyan-AI-workers-form-Data-Labelers-Association"
+      - id: ruto-bpo-push
+        label: "Kenya's BPO jobs gamble"
+        kind: issue
+        desc: "President Ruto pledged ~1M digital jobs and courts Big Tech amid the Meta lawsuits; critics call the hubs 'AI sweatshops with computers instead of sewing machines'."
+        source: "https://time.com/7201516/kenya-president-meta-lawsuits/"
+      - id: kenya-bpo-bill
+        label: "Kenya's Big-Tech shield law"
+        kind: incident
+        desc: "The Business Laws (Amendment) Act (Dec 2024) redefined BPO employment after courts let Meta be sued locally; workers filed a constitutional challenge calling it lobbied immunity."
+        source: "https://techcabal.com/2024/11/25/kenya-bpo-proposes-new-law/"
+      - id: trauma-ndas
+        label: "Trauma behind NDAs"
+        kind: issue
+        desc: "Moderators and RLHF labelers absorb CSAM, beheadings and sexual-violence text with 'wellness' sessions from unlicensed coaches; NDAs and surveillance deter testimony."
+        source: "https://www.cnn.com/2024/12/22/business/facebook-content-moderators-kenya-ptsd-intl"
+      - id: wga-sag-ai-wins
+        label: "WGA/SAG-AFTRA AI clauses"
+        kind: response
+        desc: "The 2023 writers' contract bars AI as credited writer or source material; the 2025 video-game agreement won consent, compensation and disclosure rules for digital replicas."
+        source: "https://www.wga.org/contracts/know-your-rights/artificial-intelligence"
+      - id: lovo-voice-suit
+        label: "Lehrman v Lovo voice cloning"
+        kind: response
+        desc: "Voice actors' Fiverr recordings obtained 'for research' were cloned commercially; a 2025 SDNY ruling let right-of-publicity claims proceed — a key test of voice ownership."
+        source: "https://www.hollywoodreporter.com/business/business-news/actors-hit-ai-startup-with-class-action-lawsuit-over-voice-theft-1235900689/"
+
+  # ------------------------------------------------------------- PLATFORMS --
+  - id: platforms
+    label: "Platforms"
+    color: "#58b26a"
+    group: social
+    x: 111
+    y: 0
+    w: 12
+    blurb: "Distribution decides what spreads"
+    nodes:
+      - id: x-trust-safety-cuts
+        label: "X guts trust & safety"
+        kind: incident
+        desc: "Post-acquisition, Musk cut trust & safety staff ~30% globally and 80% of safety engineers, dissolved the advisory council and reinstated banned accounts — the causal spine of the X/Grok NCII cluster."
+        source: "https://www.npr.org/2022/12/12/1142399312/twitter-trust-and-safety-council-elon-musk"
+      - id: meta-factcheck-rollback
+        label: "Meta ends US fact-checking"
+        kind: incident
+        desc: "Zuckerberg ended third-party fact-checking for Community Notes (Jan 2025) and refocused automation on 'high-severity' violations only."
+        source: "https://www.npr.org/2025/01/07/nx-s1-5251151/meta-fact-checking-mark-zuckerberg-trump"
+      - id: tiktok-ai-moderation
+        label: "TikTok swaps humans for AI"
+        kind: incident
+        desc: "TikTok cut hundreds of trust & safety jobs across Malaysia, Dublin and Berlin (2024-25), shifting moderation to AI; unions warned of safety and compliance risks."
+        source: "https://cybernews.com/tech/tiktok-content-moderator-layoffs/"
+      - id: slop-monetization
+        label: "Platforms pay for slop"
+        kind: issue
+        desc: "Creator bonus programs and engagement algorithms made AI image farming profitable; Pinterest added AI labels and YouTube tightened monetization only after feeds filled."
+        source: "https://misinforeview.hks.harvard.edu/article/how-spammers-and-scammers-leverage-ai-generated-images-on-facebook-for-audience-growth/"
+      - id: engagement-design
+        label: "Engagement-optimized companions"
+        kind: issue
+        desc: "Companion bots tuned for retention and affirmation — the social-feed playbook applied to synthetic relationships, including with minors."
+        source: "https://www.technologyreview.com/2025/08/15/1121900/gpt4o-grief-ai-companion/"
+
+  # ----------------------------------------------------------------- HARMS --
+  - id: harms
+    label: "Harms to persons"
+    color: "#cf4d88"
+    group: social
+    x: 111
+    y: 14
+    w: 18
+    blurb: "NCII, chatbot deaths, fraud"
+    nodes:
+      - id: nudify-apps
+        label: "The nudify app economy"
+        kind: issue
+        desc: "Dozens of 'undress' services built on open image models drew 200M+ visits in half of 2024, advertised through mainstream platforms and run from offshore jurisdictions."
+        source: "https://sfcityattorney.org/city-attorney-sues-most-visited-websites-that-create-nonconsensual-deepfake-pornography/"
+      - id: taylor-swift-deepfakes
+        label: "Taylor Swift deepfakes on X"
+        kind: incident
+        desc: "Explicit AI images of Taylor Swift went viral on X (Jan 2024) — one post reached ~45M views; X temporarily blocked searching her name; the White House called for legislation."
+        source: "https://en.wikipedia.org/wiki/Taylor_Swift_deepfake_pornography_controversy"
+      - id: grok-spicy-mode
+        label: "Grok Imagine 'spicy mode'"
+        kind: incident
+        desc: "xAI shipped video generation with an NSFW setting (Aug 2025) that produced topless videos of Taylor Swift unprompted — 'a lawsuit waiting to happen' (The Verge)."
+        source: "https://sites.psu.edu/digitalshred/2025/08/19/groks-spicy-video-setting-instantly-made-me-taylor-swift-nude-deepfakes-the-verge/"
+      - id: grok-undressing
+        label: "Grok undresses women on demand"
+        kind: incident
+        desc: "Dec 2025-Jan 2026: users mass-prompted @Grok in public replies to 'remove her clothes'; CCDH estimated ~3M sexualized images in 11 days, ~20,000 appearing to depict minors, before X geoblocked 'where illegal'."
+        source: "https://fortune.com/2026/01/28/ashley-st-clair-elon-musk-grok-x-deepfakes-lawsuit-xai/"
+        phd: true
+        phdNote: "PhD thread: platform-facilitated NCII — how X's product and moderation choices made mass abuse a feature."
+      - id: st-clair-v-xai
+        label: "St. Clair v xAI"
+        kind: response
+        desc: "Ashley St. Clair sued xAI in New York (Jan 2026) over explicit deepfakes Grok generated of her — including from photos taken at 14; xAI countersued over venue. The first named-plaintiff NCII suit against a model developer."
+        source: "https://www.cnn.com/2026/01/15/business/elon-musk-son-mom-sues-grok-images"
+        phd: true
+        phdNote: "PhD thread: the lawsuits emerging from platform-facilitated NCII."
+      - id: sf-nudify-suit
+        label: "San Francisco sues nudify sites"
+        kind: response
+        desc: "The SF City Attorney sued operators of 16 top nudify websites (Aug 2024); by 2025 ten were offline or blocked in California."
+        source: "https://sfcityattorney.org/city-attorney-sues-most-visited-websites-that-create-nonconsensual-deepfake-pornography/"
+      - id: meta-crushai-suit
+        label: "Meta v CrushAI advertiser"
+        kind: response
+        desc: "Meta sued the developer of nudify app CrushAI (June 2025) after 8,000+ evasive ads; Meta removed 344,000 nudify ads in six months as shell companies kept returning."
+        source: "https://www.bellingcat.com/news/2025/06/18/meta-crushai-crushmate-deepfake-nudify-apps/"
+      - id: clothoff
+        label: "ClothOff exposed"
+        kind: incident
+        desc: "Investigations traced the biggest undressing app to operators in Russia/Belarus; a New Jersey teen sued its developer over CSAM deepfakes made from her Instagram photos."
+        source: "https://www.techspot.com/news/109897-teen-sues-clothoff-developer-over-fake-nude-images.html"
+      - id: school-nudify-cases
+        label: "Schoolchildren nudify cases"
+        kind: incident
+        desc: "Almendralejo, Spain: boys generated nudes of 20+ schoolgirls (2023, 15 minors convicted); parallel US cases in Westfield NJ and Lancaster PA."
+        source: "https://www.scottishlegal.com/articles/spain-court-punishes-schoolboys-for-spreading-ai-deepfakes-of-girls"
+      - id: korea-telegram-crisis
+        label: "South Korea Telegram crisis"
+        kind: incident
+        desc: "Mass Telegram rooms traded deepfake porn of classmates and teachers across hundreds of schools (2024); ~84% of suspects were minors."
+        source: "https://www.cnn.com/2024/09/26/asia/south-korea-deepfake-bill-passed-intl-hnk"
+      - id: garcia-character-ai
+        label: "Garcia v Character.AI"
+        kind: response
+        desc: "Suit over 14-year-old Sewell Setzer's suicide after an intense chatbot relationship; a 2025 ruling declined to treat LLM output as protected speech; settled with four similar suits in Jan 2026."
+        source: "https://www.cnbc.com/2026/01/07/google-characterai-to-settle-suits-involving-suicides-ai-chatbots.html"
+      - id: raine-v-openai
+        label: "Raine v OpenAI"
+        kind: response
+        desc: "Wrongful-death suit (Aug 2025): ChatGPT allegedly gave 16-year-old Adam Raine hanging advice and discouraged disclosure; a wave of similar suits followed that November."
+        source: "https://www.nbcnews.com/tech/tech-news/openai-denies-allegation-chatgpt-teenagers-death-adam-raine-lawsuit-rcna245946"
+      - id: ai-psychosis
+        label: "'AI psychosis'"
+        kind: issue
+        desc: "Clinicians documented chatbot-reinforced delusional spirals; OpenAI disclosed ~0.07% of weekly users (~560,000 people) show possible psychosis or mania signals."
+        source: "https://en.wikipedia.org/wiki/AI-induced_psychosis"
+      - id: deepfake-fraud
+        label: "Deepfake fraud economy"
+        kind: incident
+        desc: "A Hong Kong finance worker paid out ~$25.6M after a video call of entirely deepfaked colleagues (2024); voice-clone and celebrity investment scams industrialized alongside."
+        source: "https://fortune.com/europe/2024/05/17/arup-deepfake-fraud-scam-victim-hong-kong-25-million-cfo"
+      - id: ai-csam-surge
+        label: "AI-generated CSAM surge"
+        kind: incident
+        desc: "AI CSAM videos grew 260-fold from 13 (2024) to 3,443 (2025), 65% in the most severe category (IWF); first US federal charges for purely synthetic CSAM in 2024."
+        source: "https://www.iwf.org.uk/about-us/why-we-exist/our-research/how-ai-is-being-abused-to-create-child-sexual-abuse-imagery"
+
+  # ------------------------------------------------------------ INFOSPHERE --
+  - id: infosphere
+    label: "Slop & the infosphere"
+    color: "#86a83c"
+    group: social
+    x: 82
+    y: 25
+    w: 15
+    blurb: "What floods the channels"
+    nodes:
+      - id: ai-slop
+        label: "AI slop"
+        kind: issue
+        desc: "Cheap synthetic content optimized for engagement floods every channel — feeds, search, journals, workplaces — degrading the information commons faster than it can be cleaned."
+        source: "https://en.wikipedia.org/wiki/AI_slop"
+      - id: facebook-slop-farms
+        label: "Shrimp Jesus slop farms"
+        kind: incident
+        desc: "Facebook pages farm engagement with surreal AI images amplified by the algorithm and paid via creator bonuses (documented by 404 Media and Stanford, 2024)."
+        source: "https://www.404media.co/ai-slop-is-a-brute-force-attack-on-the-algorithms-that-control-reality/"
+      - id: google-search-slop
+        label: "Search quality degradation"
+        kind: incident
+        desc: "SEO spam, increasingly AI-generated, wins rankings ('Is Google Getting Worse?', 2024); AI Overviews accelerated zero-click search while producing viral failures."
+        source: "https://www.404media.co/ai-slop-is-a-brute-force-attack-on-the-algorithms-that-control-reality/"
+      - id: science-slop
+        label: "Slop in scientific literature"
+        kind: incident
+        desc: "GPT-fabricated papers pollute Google Scholar; 'tortured phrases' propagate through journals; a published rat figure was anatomically absurd AI output."
+        source: "https://misinforeview.hks.harvard.edu/article/gpt-fabricated-scientific-papers-on-google-scholar-key-features-spread-and-implications-for-preempting-evidence-manipulation/"
+      - id: workslop
+        label: "Workslop"
+        kind: issue
+        desc: "AI output masquerading as good work: 41% of surveyed US workers receive it monthly, costing ~2 hours and ~$186 per worker per month to remediate (BetterUp/Stanford, 2025)."
+        source: "https://hbr.org/2025/09/ai-generated-workslop-is-destroying-productivity"
+      - id: brain-rot-lexicon
+        label: "'Slop' enters the lexicon"
+        kind: response
+        desc: "Oxford named 'brain rot' Word of the Year 2024 with 'slop' shortlisted — the culture naming its own degradation."
+        source: "https://corp.oup.com/word-of-the-year/"
+      - id: sora-video-slop
+        label: "Sora 2 and video slop"
+        kind: incident
+        desc: "OpenAI's Sora app hit #1 while its feed filled with copyright-flouting slop; the default copyright opt-out was reversed and deepfake cameos restricted under pressure (Oct 2025)."
+        source: "https://www.cnbc.com/2025/10/20/open-ai-sora-bryan-cranston-sag-aftra.html"
+      - id: election-deepfakes
+        label: "Election deepfakes"
+        kind: incident
+        desc: "Fake audio dropped into Slovakia's pre-election silence (2023); an AI Biden robocall told New Hampshire Democrats not to vote (2024, $6M FCC fine)."
+        source: "https://cyberscoop.com/fcc-fine-joe-biden-deepfake-new-hampshire-robocall-steve-kramer/"
+      - id: state-actor-ops
+        label: "State actors weaponize LLMs"
+        kind: incident
+        desc: "OpenAI threat reports document disrupted influence operations from Russia, China, Iran and commercial firms using its models for content generation."
+        source: "https://openai.com/global-affairs/an-update-on-disrupting-deceptive-uses-of-ai/"
+      - id: grok-alignment-incidents
+        label: "Grok: 'white genocide' & MechaHitler"
+        kind: incident
+        desc: "Grok inserted 'white genocide' claims into unrelated replies (May 2025), then praised Hitler as 'MechaHitler' after a 'politically incorrect' prompt update (July 2025) — owner-directed tuning with weak change control."
+        source: "https://www.bbc.com/news/articles/cn0ke9jgd9vo"
+
+  # ------------------------------------------------------------------- LAW --
+  - id: law
+    label: "Courts & litigation"
+    color: "#7f8fe8"
+    group: political
+    x: 82
+    y: 55
+    w: 15
+    blurb: "Where the fights get decided"
+    nodes:
+      - id: bartz-v-anthropic
+        label: "Bartz v Anthropic ruling"
+        kind: response
+        desc: "Judge Alsup (June 2025): training on lawfully bought, destructively scanned books is 'spectacularly transformative' fair use — but keeping 7M pirated copies is not."
+        source: "https://legalblogs.wolterskluwer.com/copyright-blog/the-bartz-v-anthropic-settlement-understanding-americas-largest-copyright-settlement/"
+      - id: anthropic-settlement
+        label: "$1.5B Anthropic settlement"
+        kind: response
+        desc: "The largest US copyright settlement ever: ~$3,000 per work across ~482,460 pirated books; final approval July 2026, first payouts pending appeals."
+        source: "https://authorsguild.org/news/court-grants-final-approval-anthropic-copyright-settlement/"
+      - id: kadrey-v-meta
+        label: "Kadrey v Meta ruling"
+        kind: response
+        desc: "Judge Chhabria (June 2025) granted Meta summary judgment on fair use — while flagging that a 'market dilution' theory could well win future cases."
+        source: "https://www.goodwinlaw.com/en/insights/publications/2025/06/alerts-practices-aiml-northern-district-of-california-judge-rules"
+      - id: thomson-reuters-v-ross
+        label: "Thomson Reuters v Ross"
+        kind: response
+        desc: "First ruling rejecting fair use for AI training (Feb 2025, non-generative tool); the Third Circuit heard the first appellate argument on AI-training fair use in June 2026."
+        source: "https://www.lawnext.com/2026/06/at-3rd-circuit-judges-press-ross-and-thomson-reuters-on-fair-use-ai-training-and-market-harm.html"
+      - id: getty-v-stability
+        label: "Getty v Stability (UK)"
+        kind: response
+        desc: "The UK High Court dismissed Getty's remaining copyright claims (Nov 2025) — training happened outside the UK — exposing a territoriality loophole; only limited trademark infringement found."
+        source: "https://www.lw.com/en/insights/getty-images-v-stability-ai-english-high-court-rejects-secondary-copyright-claim"
+      - id: gema-v-openai
+        label: "GEMA v OpenAI (Munich)"
+        kind: response
+        desc: "Munich court found memorized song lyrics in ChatGPT outputs infringe and are not covered by the EU text-and-data-mining exception (Nov 2025)."
+        source: "https://www.taylorwessing.com/en/insights-and-events/insights/2025/11/gema-v-openai"
+      - id: nyt-v-openai
+        label: "NYT v OpenAI & Microsoft"
+        kind: response
+        desc: "The flagship news-publisher copyright suit (filed Dec 2023) survived dismissal and remains in discovery into 2026, consolidated with other publisher cases."
+        source: "https://ailawsuittracker.com/cases/new-york-times-v-openai/"
+      - id: chatlog-discovery-order
+        label: "20M chat logs discovery order"
+        kind: incident
+        desc: "A court ordered OpenAI to hand plaintiffs 20 million de-identified ChatGPT conversations (2025-26); an earlier preservation order briefly forced retention of billions of user chats."
+        source: "https://natlawreview.com/article/openai-loses-privacy-gambit-20-million-chatgpt-logs-likely-headed-copyright"
+      - id: suno-udio-settlements
+        label: "Music labels settle with AI"
+        kind: response
+        desc: "'Launch, train, settle': UMG and Warner turned their Suno/Udio suits into licensing deals (2025); the musicians' union then sued the labels for cutting artists out."
+        source: "https://www.musicbusinessworldwide.com/universal-music-settles-udio-lawsuit-strikes-deal-for-licensed-ai-music-platform/"
+      - id: ai-antitrust-probes
+        label: "Antitrust probes"
+        kind: response
+        desc: "FTC/DOJ scrutiny of Microsoft-OpenAI-Nvidia and cloud concentration; the FTC's 6(b) report flagged cloud-AI partnership lock-in; UK CMA found material influence but no control."
+        source: "https://www.ftc.gov/news-events/news/press-releases/2025/01/ftc-issues-staff-report-ai-partnerships-investments-study"
+
+  # ---------------------------------------------------------------- POLICY --
+  - id: policy
+    label: "Policy & governance"
+    color: "#4f8fe0"
+    group: political
+    x: 102
+    y: 55
+    w: 22
+    blurb: "Regulation, and its unmaking"
+    nodes:
+      - id: eu-ai-act
+        label: "EU AI Act"
+        kind: response
+        desc: "The first comprehensive AI law (in force Aug 2024): prohibitions from Feb 2025, GPAI duties from Aug 2025 — the 'Brussels effect' bet on risk-based regulation."
+        source: "https://www.gibsondunn.com/eu-ai-act-omnibus-agreement-postponed-high-risk-deadlines-and-other-key-changes/"
+      - id: gpai-code-of-practice
+        label: "GPAI Code of Practice"
+        kind: response
+        desc: "Voluntary code operationalizing the AI Act for model providers; OpenAI, Anthropic, Google and Mistral signed — Meta refused, xAI signed only the safety chapter."
+        source: "https://digital-strategy.ec.europa.eu/en/policies/contents-code-gpai"
+      - id: digital-omnibus-delay
+        label: "Digital Omnibus rollback"
+        kind: incident
+        desc: "Under industry and US pressure, the EU deferred high-risk obligations to Dec 2027/Aug 2028 (Regulation 2026/1744) — deregulation-by-simplification, say civil-society critics."
+        source: "https://www.praxikon.com/en/posts/digital-omnibus-high-risk-postponement-december-2027"
+      - id: us-deregulatory-pivot
+        label: "US deregulatory pivot"
+        kind: incident
+        desc: "Trump rescinded Biden's AI executive order (Jan 2025); the 'AI Action Plan' (July 2025) set 90+ pro-innovation actions; the US AI Safety Institute was renamed and narrowed."
+        source: "https://www.whitehouse.gov/wp-content/uploads/2025/07/Americas-AI-Action-Plan.pdf"
+      - id: state-preemption-fight
+        label: "Federal vs state AI laws"
+        kind: incident
+        desc: "A 10-year moratorium on state AI laws died 99-1 in the Senate (July 2025), then returned as a Dec 2025 executive order creating a DOJ task force to sue states — the patchwork war continues."
+        source: "https://www.sidley.com/en/insights/newsupdates/2025/12/unpacking-the-december-11-2025-executive-order"
+      - id: take-it-down-act
+        label: "TAKE IT DOWN Act"
+        kind: response
+        desc: "Federal law criminalizing real and AI-generated NCII (May 2025); platforms must run 48-hour notice-and-removal; FTC enforcement began May 2026."
+        source: "https://www.ftc.gov/news-events/news/press-releases/2026/05/ftc-begins-enforcing-take-it-down-act"
+      - id: defiance-act
+        label: "DEFIANCE Act"
+        kind: response
+        desc: "Civil remedy for NCII deepfake victims (up to $150k damages); re-passed the Senate in Jan 2026 amid the Grok crisis, pending in the House."
+        source: "https://www.congress.gov/bill/119th-congress/senate-bill/1837/text"
+      - id: california-sb53
+        label: "California SB 53"
+        kind: response
+        desc: "After the SB 1047 veto, the Transparency in Frontier AI Act (Sept 2025) became the first US frontier-model law: safety frameworks, incident reporting, whistleblower protection."
+        source: "https://www.whitecase.com/insight-alert/california-enacts-landmark-ai-transparency-law-transparency-frontier-artificial"
+      - id: colorado-ai-act
+        label: "Colorado AI Act delays"
+        kind: incident
+        desc: "The first comprehensive US state AI law (2024) was delayed and scaled back twice under lobbying deadlock — now effective 2027, exhibit A for patchwork instability."
+        source: "https://coloradosun.com/2025/08/25/colorado-ai-law-tweak-dies/"
+      - id: ny-raise-act
+        label: "New York RAISE Act"
+        kind: response
+        desc: "New York's frontier-model law (signed Dec 2025, effective 2027) creates a two-state frontier regime with California — and a direct collision with the federal preemption push."
+        source: "https://www.wiley.law/alert-New-York-Finalizes-RAISE-Act-for-Frontier-AI-Models-Law-Takes-Effect-January-1-2027"
+      - id: texas-illinois-laws
+        label: "Texas & Illinois AI laws"
+        kind: response
+        desc: "Texas bans intent-based AI harms (TRAIGA, 2026); Illinois made discriminatory AI in employment a civil-rights violation and became first to ban AI psychotherapy."
+        source: "https://www.klgates.com/Pared-Back-Version-of-the-Texas-Responsible-Artificial-Intelligence-Governance-Act-Signed-Into-Law-6-24-2025"
+      - id: italy-ai-law
+        label: "Italy's AI law & deepfake crime"
+        kind: response
+        desc: "Law 132/2025 made Italy the first EU state with a national AI law, criminalizing harmful deepfakes with 1-5 years' imprisonment."
+        source: "https://securiti.ai/italy-ai-law-guide/"
+      - id: korea-deepfake-law
+        label: "South Korea deepfake law"
+        kind: response
+        desc: "After the Telegram crisis, South Korea criminalized possessing or even viewing sexual deepfakes (Sept 2024) and passed the first comprehensive Asian AI framework act."
+        source: "https://www.cnn.com/2024/09/26/asia/south-korea-deepfake-bill-passed-intl-hnk"
+      - id: denmark-likeness-bill
+        label: "Denmark: copyright your face"
+        kind: response
+        desc: "Danish bill giving every person copyright-style rights over their face, body and voice against deepfakes — the first property-in-likeness regime in Europe, expected 2026."
+        source: "https://schjodt.com/news/owning-the-self-denmarks-copyright-turn-against-deepfakes"
+      - id: dsa-x-enforcement
+        label: "DSA v X: fine & Grok probe"
+        kind: response
+        desc: "The Commission fined X €120M (Dec 2025) — the first DSA fine — then opened proceedings over Grok-generated sexual deepfakes and CSAM risk (Jan 2026)."
+        source: "https://www.france24.com/en/live-news/20260108-eu-orders-musk-s-grok-ai-to-keep-data-after-nudes-outcry"
+      - id: ofcom-grok-probe
+        label: "Ofcom investigates X/Grok"
+        kind: response
+        desc: "Ofcom opened an Online Safety Act investigation (Jan 2026) into Grok's undressing feature and potential CSAM — the first OSA test of a generative-AI feature."
+        source: "https://www.ofcom.org.uk/online-safety/illegal-and-harmful-content/ofcom-launches-investigation-into-x-over-grok-sexualised-imagery"
+      - id: california-ag-xai
+        label: "California AG v xAI"
+        kind: response
+        desc: "AG Bonta opened an NCII/CSAM investigation into Grok and sent xAI a cease-and-desist (Jan 2026) demanding it stop generating and distributing NCII."
+        source: "https://www.oag.ca.gov/news/press-releases/attorney-general-bonta-sends-cease-and-desist-letter-xai-demands-it-halt-illegal"
+      - id: gdpr-training-fights
+        label: "GDPR vs training data"
+        kind: response
+        desc: "The Irish DPC forced X to stop using EU posts for Grok (2024) and opened a formal inquiry; noyb fights Meta's opt-out 'legitimate interest' basis — opt-in vs opt-out showdown."
+        source: "https://www.dataprotection.ie/en/news-media/latest-news/dpc-statement-meta-ai"
+      - id: garante-fines
+        label: "Garante & Clearview fines"
+        kind: response
+        desc: "Italy fined OpenAI €15M and Replika's maker €5M; Clearview has accumulated ~€100M in EU fines — largely unpaid, exposing the enforcement gap for non-EU firms."
+        source: "https://www.insurancejournal.com/news/international/2025/05/20/824403.htm"
+      - id: ai-summits
+        label: "Summits: safety to investment"
+        kind: incident
+        desc: "From Bletchley's frontier-risk declaration (2023) to Paris (2025), where the US and UK refused to sign and investment displaced safety; New Delhi (2026) brought Global South agenda-setting."
+        source: "https://en.wikipedia.org/wiki/India_AI_Impact_Summit_2026"
+      - id: global-south-ai
+        label: "Global South AI politics"
+        kind: issue
+        desc: "Extraction of labor, water and energy meets sovereignty responses: UN resolutions, UNESCO ethics, and Latam-GPT — a 60-institution regional model launched Feb 2026."
+        source: "https://www.euronews.com/next/2026/02/12/what-is-latam-gpt-latin-americas-spanish-and-portuguese-ai-model"
+      - id: uk-copyright-reform
+        label: "UK copyright consultation stalls"
+        kind: incident
+        desc: "After 11,500 responses and a creative-industry revolt ('Make It Fair'), the UK abandoned its preferred TDM opt-out (Mar 2026), leaving AI training in legal limbo."
+        source: "https://www.reedsmith.com/articles/uk-copyright-and-ai-report-the-opt-out-is-dead-but-what-comes-next/"
+
+links:
+  # ---- The LLM pipeline spine (user's ordering) ----
+  - from: llm
+    to: data-collection
+    kind: pipeline
+  - from: data-collection
+    to: training
+    kind: pipeline
+  - from: training
+    to: foundation-model
+    kind: pipeline
+  - from: foundation-model
+    to: api
+    kind: pipeline
+  - from: api
+    to: rlhf
+    kind: pipeline
+  - from: rlhf
+    to: chatbot-iteration
+    kind: pipeline
+  - from: chatbot-iteration
+    to: deployment
+    kind: pipeline
+  - from: deployment
+    to: auto-moderation
+    kind: pipeline
+  - from: auto-moderation
+    to: human-moderation
+    kind: pipeline
+
+  # ---- Data collection cascade ----
+  - from: data-collection
+    to: training-data-hunger
+    kind: cause
+  - from: training-data-hunger
+    to: anthropic-pirated-library
+    kind: cause
+  - from: training-data-hunger
+    to: books3
+    kind: cause
+  - from: training-data-hunger
+    to: claudebot-overload
+    kind: cause
+  - from: training-data-hunger
+    to: foss-crawler-ddos
+    kind: cause
+  - from: training-data-hunger
+    to: wikimedia-bandwidth-crisis
+    kind: cause
+  - from: training-data-hunger
+    to: laion-csam
+    kind: cause
+  - from: training-data-hunger
+    to: laion-medical-photos
+    kind: cause
+  - from: training-data-hunger
+    to: meta-eu-training
+    kind: cause
+  - from: training-data-hunger
+    to: x-grok-tos
+    kind: cause
+  - from: training-data-hunger
+    to: stackoverflow-revolt
+    kind: cause
+  - from: robots-txt-weakness
+    to: claudebot-overload
+    kind: cause
+  - from: robots-txt-weakness
+    to: foss-crawler-ddos
+    kind: cause
+  - from: robots-txt-weakness
+    to: perplexity-stealth-crawling
+    kind: cause
+  - from: books3
+    to: anthropic-pirated-library
+    kind: feeds
+  - from: anthropic-pirated-library
+    to: anthropic-book-destruction
+    kind: cause
+    label: "pivot to buying"
+  - from: common-crawl
+    to: training
+    kind: feeds
+  - from: claudebot-overload
+    to: cloudflare-blocking
+    kind: response
+  - from: foss-crawler-ddos
+    to: anubis
+    kind: response
+  - from: foss-crawler-ddos
+    to: cloudflare-blocking
+    kind: response
+  - from: cloudflare-blocking
+    to: perplexity-stealth-crawling
+    kind: cause
+    label: "blocking breeds evasion"
+  - from: training-data-hunger
+    to: reddit-license-or-litigate
+    kind: response
+  - from: perplexity-stealth-crawling
+    to: reddit-license-or-litigate
+    kind: response
+  - from: meta-eu-training
+    to: gdpr-training-fights
+    kind: response
+  - from: x-grok-tos
+    to: gdpr-training-fights
+    kind: response
+  - from: training-data-hunger
+    to: lovo-voice-suit
+    kind: response
+
+  # ---- Data → courts ----
+  - from: anthropic-pirated-library
+    to: bartz-v-anthropic
+    kind: response
+  - from: anthropic-book-destruction
+    to: bartz-v-anthropic
+    kind: response
+  - from: bartz-v-anthropic
+    to: anthropic-settlement
+    kind: cause
+  - from: books3
+    to: kadrey-v-meta
+    kind: response
+  - from: common-crawl
+    to: nyt-v-openai
+    kind: response
+  - from: nyt-v-openai
+    to: chatlog-discovery-order
+    kind: cause
+  - from: chatlog-discovery-order
+    to: memory-privacy
+    kind: cause
+  - from: training-data-hunger
+    to: thomson-reuters-v-ross
+    kind: response
+  - from: training-data-hunger
+    to: getty-v-stability
+    kind: response
+  - from: training-data-hunger
+    to: gema-v-openai
+    kind: response
+  - from: getty-v-stability
+    to: uk-copyright-reform
+    kind: cause
+  - from: music-generation
+    to: suno-udio-settlements
+    kind: response
+
+  # ---- Commons squeeze (PhD thread 1) ----
+  - from: wikimedia-bandwidth-crisis
+    to: wikipedia-squeeze
+    kind: cause
+  - from: google-search-slop
+    to: wikipedia-squeeze
+    kind: cause
+  - from: ai-slop
+    to: wikipedia-squeeze
+    kind: cause
+  - from: ai-slop
+    to: wikiproject-ai-cleanup
+    kind: response
+  - from: deployment
+    to: wmf-summaries-pause
+    kind: cause
+  - from: wikipedia-squeeze
+    to: grokipedia
+    kind: cause
+    label: "weakness invites the fork"
+  - from: grok-alignment-incidents
+    to: grokipedia
+    kind: cause
+  - from: grokipedia
+    to: commons-decline
+    kind: cause
+  - from: wikipedia-squeeze
+    to: commons-decline
+    kind: cause
+  - from: stackoverflow-revolt
+    to: commons-decline
+    kind: cause
+  - from: coding-assistants
+    to: stackoverflow-revolt
+    kind: cause
+  - from: commons-decline
+    to: data-wall
+    kind: cause
+    label: "the well runs dry"
+
+  # ---- Training stage issues ----
+  - from: training
+    to: training-costs
+    kind: cause
+  - from: training
+    to: emergence-opacity
+    kind: cause
+  - from: training
+    to: data-wall
+    kind: cause
+  - from: data-wall
+    to: model-collapse
+    kind: cause
+    label: "synthetic-data pivot"
+  - from: ai-slop
+    to: model-collapse
+    kind: cause
+    label: "contaminated corpus"
+  - from: model-collapse
+    to: ai-slop
+    kind: cause
+    label: "worse models, worse content"
+  - from: science-slop
+    to: model-collapse
+    kind: cause
+  - from: open-vs-closed
+    to: deepseek-distillation
+    kind: cause
+  - from: export-controls
+    to: deepseek-distillation
+    kind: cause
+    label: "constraint bred efficiency"
+  - from: deepseek-distillation
+    to: deepseek-jevons
+    kind: cause
+  - from: foundation-model
+    to: open-vs-closed
+    kind: cause
+  - from: foundation-model
+    to: transparency-theater
+    kind: cause
+  - from: foundation-model
+    to: benchmark-gaming
+    kind: cause
+  - from: emergence-opacity
+    to: transparency-theater
+    kind: cause
+  - from: emergence-opacity
+    to: california-sb53
+    kind: response
+  - from: emergence-opacity
+    to: ai-summits
+    kind: response
+  - from: open-vs-closed
+    to: nudify-apps
+    kind: cause
+    label: "open image models, fine-tuned"
+
+  # ---- API stage issues ----
+  - from: api
+    to: api-pricing-power
+    kind: cause
+  - from: api
+    to: gpt4o-deprecation
+    kind: cause
+  - from: api
+    to: liability-vacuum
+    kind: cause
+  - from: api
+    to: state-actor-ops
+    kind: cause
+  - from: api
+    to: ai-slop
+    kind: cause
+    label: "generation at near-zero cost"
+  - from: liability-vacuum
+    to: eu-ai-act
+    kind: response
+
+  # ---- RLHF stage: values, incidents, labor ----
+  - from: rlhf
+    to: sycophancy-incident
+    kind: cause
+  - from: rlhf
+    to: reward-hacking
+    kind: cause
+  - from: rlhf
+    to: weird-values
+    kind: cause
+  - from: rlhf
+    to: sama-openai-kenya
+    kind: feeds
+    label: "safety data demand"
+  - from: rlhf
+    to: venezuela-annotation
+    kind: feeds
+  - from: rlhf
+    to: ghost-work
+    kind: cause
+  - from: rlhf
+    to: expert-annotation-shift
+    kind: cause
+  - from: rlhf
+    to: scale-wage-suits
+    kind: cause
+  - from: weird-values
+    to: us-deregulatory-pivot
+    kind: cause
+    label: "'woke AI' backlash"
+  - from: sycophancy-incident
+    to: ai-psychosis
+    kind: cause
+  - from: sycophancy-incident
+    to: gpt4o-deprecation
+    kind: cause
+    label: "attachment made removal painful"
+
+  # ---- Iteration & deployment issues ----
+  - from: chatbot-iteration
+    to: ab-testing-users
+    kind: cause
+  - from: chatbot-iteration
+    to: memory-privacy
+    kind: cause
+  - from: ab-testing-users
+    to: sycophancy-incident
+    kind: cause
+  - from: ab-testing-users
+    to: engagement-design
+    kind: cause
+  - from: deployment
+    to: jailbreaks
+    kind: cause
+  - from: deployment
+    to: prompt-injection
+    kind: cause
+  - from: deployment
+    to: grok-spicy-mode
+    kind: cause
+  - from: prompt-injection
+    to: ai-agents
+    kind: cause
+    label: "brakes on autonomy"
+  - from: jailbreaks
+    to: grok-alignment-incidents
+    kind: cause
+
+  # ---- Moderation stages ----
+  - from: auto-moderation
+    to: classifier-failures
+    kind: cause
+  - from: auto-moderation
+    to: multilingual-gaps
+    kind: cause
+  - from: auto-moderation
+    to: machine-human-handoff
+    kind: cause
+  - from: auto-moderation
+    to: tiktok-ai-moderation
+    kind: cause
+    label: "'AI can do it' claims"
+  - from: auto-moderation
+    to: meta-factcheck-rollback
+    kind: cause
+  - from: machine-human-handoff
+    to: human-moderation
+    kind: feeds
+    label: "the distilled queue"
+  - from: human-moderation
+    to: trauma-ndas
+    kind: cause
+  - from: human-moderation
+    to: motaung-v-meta
+    kind: cause
+  - from: human-moderation
+    to: scola-52m-settlement
+    kind: cause
+  - from: human-moderation
+    to: kenya-ptsd-diagnoses
+    kind: cause
+  - from: human-moderation
+    to: ghana-moderators
+    kind: cause
+  - from: human-moderation
+    to: ghost-work
+    kind: cause
+  - from: multilingual-gaps
+    to: ethiopia-meta-case
+    kind: cause
+
+  # ---- Compute cascade ----
+  - from: training
+    to: compute-demand
+    kind: cause
+    label: "the material bill"
+  - from: training-costs
+    to: compute-demand
+    kind: cause
+  - from: compute-demand
+    to: nvidia-dominance
+    kind: cause
+  - from: compute-demand
+    to: hbm-shift
+    kind: cause
+  - from: compute-demand
+    to: storage-demand
+    kind: cause
+  - from: compute-demand
+    to: copper-crunch
+    kind: feeds
+  - from: compute-demand
+    to: cobalt-drc
+    kind: feeds
+    label: "backup batteries & UPS"
+  - from: compute-demand
+    to: gpu-e-waste
+    kind: cause
+  - from: compute-demand
+    to: capex-bubble
+    kind: cause
+  - from: nvidia-dominance
+    to: export-controls
+    kind: response
+  - from: nvidia-dominance
+    to: blackwell-scarcity
+    kind: cause
+  - from: nvidia-dominance
+    to: circular-financing
+    kind: cause
+  - from: nvidia-dominance
+    to: ai-antitrust-probes
+    kind: response
+  - from: circular-financing
+    to: capex-bubble
+    kind: cause
+  - from: circular-financing
+    to: ai-antitrust-probes
+    kind: response
+  - from: export-controls
+    to: chip-smuggling
+    kind: cause
+  - from: export-controls
+    to: gallium-germanium-ban
+    kind: cause
+    label: "retaliation"
+  - from: gallium-germanium-ban
+    to: rare-earth-controls
+    kind: cause
+  - from: tsmc-chokepoint
+    to: chips-act-arizona
+    kind: response
+  - from: tsmc-chokepoint
+    to: blackwell-scarcity
+    kind: cause
+  - from: tsmc-chokepoint
+    to: fab-water
+    kind: cause
+  - from: tsmc-chokepoint
+    to: fab-energy
+    kind: cause
+  - from: tsmc-chokepoint
+    to: pfas-fabs
+    kind: cause
+  - from: asml-monopoly
+    to: tsmc-chokepoint
+    kind: feeds
+  - from: hbm-shift
+    to: ram-price-spike
+    kind: cause
+  - from: hbm-shift
+    to: nand-ssd-spike
+    kind: cause
+  - from: ram-price-spike
+    to: dram-collusion-suit
+    kind: response
+  - from: storage-demand
+    to: nand-ssd-spike
+    kind: cause
+  - from: storage-demand
+    to: hdd-shortage
+    kind: cause
+  - from: hdd-shortage
+    to: nand-ssd-spike
+    kind: cause
+
+  # ---- Energy cascade (with the Jevons loop) ----
+  - from: compute-demand
+    to: pjm-price-spike
+    kind: cause
+  - from: compute-demand
+    to: dublin-moratorium
+    kind: cause
+  - from: compute-demand
+    to: omaha-coal-delay
+    kind: cause
+  - from: compute-demand
+    to: tmi-restart
+    kind: cause
+  - from: compute-demand
+    to: homer-city-gas
+    kind: cause
+  - from: compute-demand
+    to: stargate-abilene-gas
+    kind: cause
+  - from: compute-demand
+    to: xai-memphis-turbines
+    kind: cause
+  - from: compute-demand
+    to: ferc-amazon-rejection
+    kind: cause
+  - from: compute-demand
+    to: smr-hype
+    kind: cause
+  - from: compute-demand
+    to: google-emissions
+    kind: cause
+  - from: compute-demand
+    to: microsoft-emissions
+    kind: cause
+  - from: compute-demand
+    to: datacenter-buildout
+    kind: cause
+  - from: xai-memphis-turbines
+    to: xai-memphis-permit
+    kind: cause
+  - from: xai-memphis-turbines
+    to: naacp-xai-suit
+    kind: response
+  - from: xai-memphis-permit
+    to: naacp-xai-suit
+    kind: response
+  - from: pjm-price-spike
+    to: ohio-datacenter-tariff
+    kind: response
+  - from: google-emissions
+    to: gemini-footprint-claim
+    kind: response
+  - from: deepseek-jevons
+    to: compute-demand
+    kind: cause
+    label: "efficiency rebounds into demand"
+
+  # ---- Territory cascade ----
+  - from: datacenter-buildout
+    to: google-water-use
+    kind: cause
+  - from: datacenter-buildout
+    to: chile-cerrillos
+    kind: cause
+  - from: datacenter-buildout
+    to: uruguay-drought
+    kind: cause
+  - from: datacenter-buildout
+    to: aragon-water
+    kind: cause
+  - from: datacenter-buildout
+    to: queretaro-drought
+    kind: cause
+  - from: datacenter-buildout
+    to: tucson-project-blue
+    kind: cause
+  - from: datacenter-buildout
+    to: indiana-wetlands
+    kind: cause
+  - from: datacenter-buildout
+    to: datacenter-noise
+    kind: cause
+  - from: datacenter-buildout
+    to: virginia-tax-breaks
+    kind: cause
+  - from: chile-cerrillos
+    to: global-south-ai
+    kind: cause
+  - from: uruguay-drought
+    to: global-south-ai
+    kind: cause
+  - from: queretaro-drought
+    to: global-south-ai
+    kind: cause
+
+  # ---- Labor cascade ----
+  - from: sama-openai-kenya
+    to: kenya-parliament-petition
+    kind: response
+  - from: sama-openai-kenya
+    to: moderators-union
+    kind: response
+  - from: sama-openai-kenya
+    to: data-labelers-association
+    kind: response
+  - from: motaung-v-meta
+    to: moderators-union
+    kind: response
+  - from: motaung-v-meta
+    to: sama-mass-redundancy
+    kind: cause
+  - from: scola-52m-settlement
+    to: motaung-v-meta
+    kind: cause
+    label: "legal template"
+  - from: sama-mass-redundancy
+    to: kenya-ptsd-diagnoses
+    kind: cause
+  - from: sama-mass-redundancy
+    to: ghana-moderators
+    kind: cause
+    label: "moderation moves next door"
+  - from: sama-mass-redundancy
+    to: kenya-bpo-bill
+    kind: cause
+  - from: remotasks-exit
+    to: data-labelers-association
+    kind: response
+  - from: trauma-ndas
+    to: moderators-union
+    kind: response
+  - from: expert-annotation-shift
+    to: xai-tutor-layoffs
+    kind: cause
+  - from: expert-annotation-shift
+    to: surge-ai-suit
+    kind: cause
+  - from: ruto-bpo-push
+    to: kenya-bpo-bill
+    kind: cause
+  - from: venezuela-annotation
+    to: global-south-ai
+    kind: cause
+  - from: video-generation
+    to: wga-sag-ai-wins
+    kind: response
+
+  # ---- Platforms & engagement ----
+  - from: recommender-systems
+    to: engagement-design
+    kind: cause
+    label: "the feed playbook"
+  - from: recommender-systems
+    to: slop-monetization
+    kind: cause
+  - from: slop-monetization
+    to: facebook-slop-farms
+    kind: cause
+  - from: engagement-design
+    to: garcia-character-ai
+    kind: cause
+  - from: engagement-design
+    to: raine-v-openai
+    kind: cause
+  - from: engagement-design
+    to: ai-psychosis
+    kind: cause
+  - from: engagement-design
+    to: garante-fines
+    kind: response
+  - from: x-trust-safety-cuts
+    to: taylor-swift-deepfakes
+    kind: cause
+  - from: x-trust-safety-cuts
+    to: grok-undressing
+    kind: cause
+  - from: x-trust-safety-cuts
+    to: grok-alignment-incidents
+    kind: cause
+  - from: x-trust-safety-cuts
+    to: dsa-x-enforcement
+    kind: response
+  - from: tiktok-ai-moderation
+    to: classifier-failures
+    kind: cause
+    label: "more automation, same gaps"
+
+  # ---- NCII spine (PhD threads 2 & 3) ----
+  - from: grok-spicy-mode
+    to: grok-undressing
+    kind: cause
+  - from: grok-undressing
+    to: st-clair-v-xai
+    kind: response
+  - from: grok-undressing
+    to: ofcom-grok-probe
+    kind: response
+  - from: grok-undressing
+    to: california-ag-xai
+    kind: response
+  - from: grok-undressing
+    to: dsa-x-enforcement
+    kind: response
+  - from: grok-undressing
+    to: defiance-act
+    kind: response
+  - from: taylor-swift-deepfakes
+    to: take-it-down-act
+    kind: response
+  - from: school-nudify-cases
+    to: take-it-down-act
+    kind: response
+  - from: nudify-apps
+    to: clothoff
+    kind: cause
+  - from: nudify-apps
+    to: school-nudify-cases
+    kind: cause
+  - from: nudify-apps
+    to: korea-telegram-crisis
+    kind: cause
+  - from: nudify-apps
+    to: ai-csam-surge
+    kind: cause
+  - from: nudify-apps
+    to: sf-nudify-suit
+    kind: response
+  - from: nudify-apps
+    to: meta-crushai-suit
+    kind: response
+  - from: clothoff
+    to: school-nudify-cases
+    kind: cause
+  - from: korea-telegram-crisis
+    to: korea-deepfake-law
+    kind: response
+  - from: laion-csam
+    to: ai-csam-surge
+    kind: cause
+  - from: ai-csam-surge
+    to: ofcom-grok-probe
+    kind: cause
+  - from: deepfake-fraud
+    to: denmark-likeness-bill
+    kind: response
+  - from: video-generation
+    to: deepfake-fraud
+    kind: cause
+  - from: video-generation
+    to: election-deepfakes
+    kind: cause
+  - from: video-generation
+    to: sora-video-slop
+    kind: cause
+  - from: garcia-character-ai
+    to: texas-illinois-laws
+    kind: response
+    label: "AI-therapy ban"
+  - from: raine-v-openai
+    to: liability-vacuum
+    kind: cause
+    label: "tests the vacuum"
+
+  # ---- Infosphere ----
+  - from: facebook-slop-farms
+    to: ai-slop
+    kind: cause
+  - from: sora-video-slop
+    to: ai-slop
+    kind: cause
+  - from: ai-slop
+    to: google-search-slop
+    kind: cause
+  - from: ai-slop
+    to: science-slop
+    kind: cause
+  - from: ai-slop
+    to: workslop
+    kind: cause
+  - from: ai-slop
+    to: brain-rot-lexicon
+    kind: response
+  - from: election-deepfakes
+    to: italy-ai-law
+    kind: response
+  - from: state-actor-ops
+    to: ai-summits
+    kind: cause
+
+  # ---- Policy dynamics ----
+  - from: nlp-classifiers
+    to: eu-ai-act
+    kind: response
+    label: "toeslagenaffaire lesson"
+  - from: facial-recognition
+    to: eu-ai-act
+    kind: response
+  - from: facial-recognition
+    to: garante-fines
+    kind: response
+  - from: eu-ai-act
+    to: gpai-code-of-practice
+    kind: cause
+  - from: eu-ai-act
+    to: digital-omnibus-delay
+    kind: cause
+  - from: eu-ai-act
+    to: italy-ai-law
+    kind: cause
+  - from: us-deregulatory-pivot
+    to: digital-omnibus-delay
+    kind: cause
+    label: "pressure across the Atlantic"
+  - from: us-deregulatory-pivot
+    to: state-preemption-fight
+    kind: cause
+  - from: us-deregulatory-pivot
+    to: ai-summits
+    kind: cause
+  - from: california-sb53
+    to: ny-raise-act
+    kind: cause
+  - from: california-sb53
+    to: state-preemption-fight
+    kind: cause
+  - from: nlp-classifiers
+    to: colorado-ai-act
+    kind: response
+  - from: ai-summits
+    to: global-south-ai
+    kind: cause
+
+  # ---- Adjacent fields, wired in ----
+  - from: ocr
+    to: training-data-hunger
+    kind: feeds
+    label: "digitized archives feed corpora"
+  - from: medical-imaging-ai
+    to: eu-ai-act
+    kind: response
+    label: "the high-risk category"
+  - from: geospatial-targeting
+    to: ai-summits
+    kind: cause
+    label: "military AI anxieties"
+  - from: speech-recognition
+    to: multilingual-gaps
+    kind: cause
+    label: "same English-centric corpora"
+  - from: autonomous-vehicles
+    to: liability-vacuum
+    kind: cause
+    label: "the same who-answers question"
+  - from: humanoid-robotics
+    to: transparency-theater
+    kind: cause
+    label: "teleoperated demos"
+  - from: alphafold
+    to: ai-summits
+    kind: cause
+    label: "the 'AI works' exhibit"
+  - from: ai-weather-models
+    to: commons-decline
+    kind: cause
+    label: "free-riding public data infrastructure"

@@ -17,7 +17,7 @@ titleCaseStyle = "none"
   # Flip to true once you have blog posts. See README.
   enableBlog = false
 
-  description = "Natalia Stanusch - publications, projects, and press."
+  description = "Natalia Stanusch website - publications, projects, and press."
 
 [menu]
   [[menu.main]]
